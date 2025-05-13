@@ -23,22 +23,12 @@ const CharterBusQuoteWidget: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   
-  // Get today's date and current time for defaults
-  const today = new Date();
-  const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-  const minDate = formattedDate; // Use formatted date as minDate
-  
-  // Format time (HH:MM)
-  const hours = String(today.getHours()).padStart(2, '0');
-  const minutes = String(today.getMinutes()).padStart(2, '0');
-  const formattedTime = `${hours}:${minutes}`;
-
   // Default form values
   const [formData, setFormData] = useState<QuoteRequest>({
     tripType: "oneWay",
     numPassengers: 1,
-    departureDate: formattedDate, // Today's date
-    departureTime: formattedTime, // Current time
+    departureDate: "",
+    departureTime: "",
     pickupLocation: {
       placeId: "",
       formattedAddress: "",
@@ -54,17 +44,13 @@ const CharterBusQuoteWidget: React.FC = () => {
   });
   
   // Ensure busType is always "standard" and amenities is empty
-  // Also preserve the default date and time
   React.useEffect(() => {
     setFormData(prev => ({ 
       ...prev, 
       busType: "standard", 
-      amenities: [],
-      // Make sure we have date and time set
-      departureDate: prev.departureDate || formattedDate,
-      departureTime: prev.departureTime || formattedTime
+      amenities: [] 
     }));
-  }, [formattedDate, formattedTime]);
+  }, []);
   
   // Create a mutation for submitting the quote request
   const { mutate, data: quoteData, isPending } = useMutation<QuoteResponse>({
@@ -161,6 +147,10 @@ const CharterBusQuoteWidget: React.FC = () => {
   const handleSpecialRequirementsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, specialRequirements: e.target.value }));
   };
+
+  // Calculate minimum date (today)
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
 
   return (
     <div className="charter-bus-quote-widget bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">

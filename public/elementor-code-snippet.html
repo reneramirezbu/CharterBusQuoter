@@ -589,6 +589,9 @@ function setupFormNavigation() {
 // Set default dates
 function setupDefaultDates() {
   const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
   const nextWeek = new Date(today);
   nextWeek.setDate(today.getDate() + 7);
   
@@ -599,36 +602,19 @@ function setupDefaultDates() {
     const dd = String(date.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   };
-
-  // Format time for the input
-  const formatTime = (date) => {
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
-  };
   
-  // Set default dates and times
+  // Set default dates
   const departureDateInput = document.getElementById('departure-date');
-  const departureTimeInput = document.getElementById('departure-time');
   const returnDateInput = document.getElementById('return-date');
-  const returnTimeInput = document.getElementById('return-time');
   
   if (departureDateInput) {
-    departureDateInput.min = formatDate(today);
-    departureDateInput.value = formatDate(today);
-  }
-  
-  if (departureTimeInput) {
-    departureTimeInput.value = formatTime(today);
+    departureDateInput.min = formatDate(tomorrow);
+    departureDateInput.value = formatDate(tomorrow);
   }
   
   if (returnDateInput) {
-    returnDateInput.min = formatDate(today);
+    returnDateInput.min = formatDate(tomorrow);
     returnDateInput.value = formatDate(nextWeek);
-  }
-  
-  if (returnTimeInput) {
-    returnTimeInput.value = formatTime(today);
   }
 }
 
