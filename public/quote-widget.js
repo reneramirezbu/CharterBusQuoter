@@ -2,21 +2,42 @@
  * Initializes Google Places Autocomplete for address inputs
  */
 function initAutocomplete() {
-  // Initialize autocomplete for pickup location
-  if (document.getElementById('pickup-location')) {
-    new google.maps.places.Autocomplete(document.getElementById('pickup-location'), {
-      types: ['address'],
-      fields: ['place_id', 'formatted_address', 'geometry']
-    });
-  }
+  console.log("Initializing Google Places Autocomplete");
   
-  // Initialize autocomplete for dropoff location
-  if (document.getElementById('dropoff-location')) {
-    new google.maps.places.Autocomplete(document.getElementById('dropoff-location'), {
-      types: ['address'],
-      fields: ['place_id', 'formatted_address', 'geometry']
-    });
-  }
+  // Retry functionality to make sure elements exist
+  setTimeout(function() {
+    // Initialize autocomplete for pickup location
+    const pickupElement = document.getElementById('pickup-location');
+    if (pickupElement) {
+      console.log("Found pickup element, initializing autocomplete");
+      const pickupAutocomplete = new google.maps.places.Autocomplete(pickupElement, {
+        types: ['address']
+      });
+      
+      pickupAutocomplete.addListener('place_changed', function() {
+        const place = pickupAutocomplete.getPlace();
+        console.log("Selected pickup place:", place);
+      });
+    } else {
+      console.error("Could not find pickup-location element");
+    }
+    
+    // Initialize autocomplete for dropoff location
+    const dropoffElement = document.getElementById('dropoff-location');
+    if (dropoffElement) {
+      console.log("Found dropoff element, initializing autocomplete");
+      const dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffElement, {
+        types: ['address']
+      });
+      
+      dropoffAutocomplete.addListener('place_changed', function() {
+        const place = dropoffAutocomplete.getPlace();
+        console.log("Selected dropoff place:", place);
+      });
+    } else {
+      console.error("Could not find dropoff-location element");
+    }
+  }, 100); // Small delay to ensure DOM is ready
 }
 
 /**
