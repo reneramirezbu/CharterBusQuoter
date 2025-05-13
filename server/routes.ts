@@ -4,6 +4,7 @@ import cors from "cors";
 import { fileURLToPath } from 'url';
 import { dirname, join } from "path";
 import { generateQuote, getQuoteById } from "./controllers/quoteController";
+import { getGoogleMapsApiKey } from "./controllers/googleMapsController";
 
 // Fix for ESM modules
 const __filename = fileURLToPath(import.meta.url);
@@ -66,13 +67,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(join(publicPath, 'quote-widget.js'));
   });
   
+  app.get('/quote-widget.css', (req, res) => {
+    res.sendFile(join(publicPath, 'quote-widget.css'));
+  });
+  
   app.get('/widget-styles.css', (req, res) => {
     res.sendFile(join(publicPath, 'widget-styles.css'));
+  });
+  
+  app.get('/quote-widget-init.js', (req, res) => {
+    res.sendFile(join(publicPath, 'quote-widget-init.js'));
+  });
+  
+  app.get('/embed.js', (req, res) => {
+    res.sendFile(join(publicPath, 'embed.js'));
   });
   
   // Quote API routes
   app.post('/api/quotes', generateQuote);
   app.get('/api/quotes/:quoteId', getQuoteById);
+  
+  // Google Maps API key endpoint
+  app.get('/api/google-maps-key', getGoogleMapsApiKey);
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
