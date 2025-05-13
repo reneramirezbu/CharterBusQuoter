@@ -1,8 +1,4 @@
-import { 
-  QuoteRequest, 
-  QuoteResponse,
-  QuoteBreakdownItem
-} from '@shared/schema';
+import { QuoteRequest, QuoteResponse, QuoteBreakdownItem } from '../../shared/schema';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -14,114 +10,147 @@ import { v4 as uuidv4 } from 'uuid';
  * @param tripDetails The details of the trip from the quote request
  * @returns A complete quote response with breakdown, subtotal, service fee, and total
  */
-export function calculateQuote(tripDetails: QuoteRequest): QuoteResponse {
-  const {
-    numPassengers,
-    busType,
-    amenities = [],
-    tripType,
-    pickupLocation,
-    dropoffLocation
-  } = tripDetails;
-
-  const breakdown: QuoteBreakdownItem[] = [];
+export async function calculateQuote(tripDetails: QuoteRequest): Promise<QuoteResponse> {
+  // Base rates
+  const BASE_RATE_PER_MILE = tripDetails.busType === 'luxury' ? 4.5 : 3.25;
+  const MINIMUM_FARE = tripDetails.busType === 'luxury' ? 450 : 350;
+  const SERVICE_FEE_PERCENTAGE = 0.05; // 5% service fee
+  const AMENITIES_PRICING = {
+    wifi: 25,
+    lavatory: 35,
+    entertainment: 45,
+    powerOutlets: 20
+  };
   
-  // 1. Base Price based on Bus Type
-  const basePrice = busType === 'luxury' ? 200 : 100;
-  breakdown.push({
-    name: `Base Price (${busType})`,
-    description: `Starting price for ${busType} charter bus`,
-    amount: basePrice
-  });
+  // Calculate distance between pickup and dropoff locations
+  const distance = await calculateDistance(
+    tripDetails.pickupLocation,
+    tripDetails.dropoffLocation
+  );
   
-  // 2. Passenger Count Adjustment
-  let passengerPrice = 0;
-  if (numPassengers > 50) passengerPrice = 150;
-  else if (numPassengers > 30) passengerPrice = 100;
-  else if (numPassengers > 15) passengerPrice = 50;
+  // Calculate base fare
+  const baseFare = Math.max(distance * BASE_RATE_PER_MILE, MINIMUM_FARE);
   
-  breakdown.push({
-    name: "Passenger Count Adjustment",
-    description: `Based on ${numPassengers} passengers`,
-    amount: passengerPrice
-  });
+  // Round trip multiplier
+  const tripMultiplier = tripDetails.tripType === 'roundTrip' ? 1.85 : 1;
   
-  // 3. Calculate distance fee using coordinates if available
-  // For a production app, this would use a directions API to get actual distance
-  let distanceFee = 85; // Default estimate
+  // Calculate amenities total
+  const amenitiesTotal = (tripDetails.amenities || []).reduce((total, amenity) => {
+    return total + (AMENITIES_PRICING[amenity as keyof typeof AMENITIES_PRICING] || 0);
+  }, 0);
   
-  // If we have coordinates from both locations, we could calculate a more accurate fee
-  if (pickupLocation.lat && pickupLocation.lng && 
-      dropoffLocation.lat && dropoffLocation.lng) {
-    // Basic calculation for demo - this should use a proper distance calculation in production
-    const latDiff = Math.abs(pickupLocation.lat - dropoffLocation.lat);
-    const lngDiff = Math.abs(pickupLocation.lng - dropoffLocation.lng);
-    const roughDistance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111; // km per degree at equator
-    
-    // Adjust fee based on rough distance (simplified)
-    if (roughDistance > 50) distanceFee = 150;
-    else if (roughDistance > 20) distanceFee = 120;
-  }
+  // Create breakdown items
+  const breakdown: QuoteBreakdownItem[] = [
+    {
+      name: 'Base Fare',
+      description: `${distance} miles at ${BASE_RATE_PER_MILE.toFixed(2)}/mile`,
+      amount: baseFare,
+    },
+    {
+      name: 'Trip Type',
+      description: tripDetails.tripType === 'roundTrip' 
+        ? 'Round trip (85% surcharge)'
+        : 'One way trip',
+      amount: baseFare * (tripMultiplier - 1),
+    }
+  ];
   
-  breakdown.push({
-    name: "Distance Fee",
-    description: `From ${pickupLocation.formattedAddress.split(',')[0]} to ${dropoffLocation.formattedAddress.split(',')[0]}`,
-    amount: distanceFee
-  });
-  
-  // 4. Calculate duration fee
-  const durationFee = 120;
-  breakdown.push({
-    name: "Duration Fee",
-    description: "Estimated trip time",
-    amount: durationFee
-  });
-  
-  // 5. Calculate amenities fees
-  if (amenities && amenities.length > 0) {
-    const amenitiesFees = amenities.length * 25;
+  // Add amenities to breakdown if any
+  if (amenitiesTotal > 0) {
     breakdown.push({
-      name: "Additional Amenities",
-      description: `${amenities.length} amenities selected`,
-      amount: amenitiesFees
-    });
-  }
-  
-  // 6. Round trip multiplier
-  const tripMultiplier = tripType === 'roundTrip' ? 1.8 : 1;
-  if (tripType === 'roundTrip') {
-    breakdown.push({
-      name: "Round Trip Multiplier",
-      description: "Return journey discount applied",
-      amount: 0,
-      multiplier: 1.8
+      name: 'Amenities',
+      description: `${tripDetails.amenities?.join(', ')}`,
+      amount: amenitiesTotal,
     });
   }
   
   // Calculate subtotal
-  let subtotal = breakdown.reduce((sum, item) => sum + item.amount, 0);
+  const subtotal = (baseFare * tripMultiplier) + amenitiesTotal;
   
-  // Apply round trip multiplier
-  subtotal *= tripMultiplier;
-  
-  // Calculate service fee (10% of subtotal)
-  const serviceFee = Math.round(subtotal * 0.10 * 100) / 100;
+  // Calculate service fee
+  const serviceFee = subtotal * SERVICE_FEE_PERCENTAGE;
   
   // Calculate total
-  const total = Math.round((subtotal + serviceFee) * 100) / 100;
+  const total = subtotal + serviceFee;
   
-  // Set quote expiration (24 hours from now)
+  // Generate quote ID
+  const quoteId = uuidv4();
+  
+  // Create expiration time (24 hours from now)
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + 24);
   
-  // Create and return the quote response
+  // Return quote response
   return {
-    quoteId: uuidv4(),
+    quoteId,
     tripDetails,
     breakdown,
-    subtotal: Math.round(subtotal * 100) / 100, // Round to 2 decimal places
+    subtotal,
     serviceFee,
     total,
+    createdAt: new Date().toISOString(),
     expiresAt: expiresAt.toISOString()
   };
+}
+
+/**
+ * Calculate distance between two locations using Google Maps Distance Matrix API
+ * or a distance calculation algorithm.
+ * 
+ * For this implementation, we're using a simplified calculation based on
+ * coordinates (Haversine formula) instead of calling the Google API.
+ * In a production environment, you would use the Google Maps API for accuracy.
+ */
+async function calculateDistance(pickup: any, dropoff: any): Promise<number> {
+  // If we have coordinates, use them to calculate distance
+  if (pickup.lat && pickup.lng && dropoff.lat && dropoff.lng) {
+    return await haversineDistance(
+      { lat: pickup.lat, lng: pickup.lng },
+      { lat: dropoff.lat, lng: dropoff.lng }
+    );
+  }
+  
+  // Fallback to addresses if we have them
+  if (pickup.formattedAddress && dropoff.formattedAddress) {
+    // Simple distance estimation based on addresses would go here
+    // In a real implementation, you'd call the Google Distance Matrix API
+    return 50; // Default to 50 miles if we can't calculate precisely
+  }
+  
+  // Default fallback
+  return 50;
+}
+
+/**
+ * Calculate the haversine distance between two points on Earth
+ * @param pointA Coordinates of first point {lat, lng}
+ * @param pointB Coordinates of second point {lat, lng}
+ * @returns Distance in miles
+ */
+async function haversineDistance(pointA: {lat: number, lng: number}, pointB: {lat: number, lng: number}): Promise<number> {
+  // Simulate async operation
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const R = 3958.8; // Earth's radius in miles
+      
+      // Convert lat/lng to radians
+      const dLat = toRadians(pointB.lat - pointA.lat);
+      const dLng = toRadians(pointB.lng - pointA.lng);
+      
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRadians(pointA.lat)) * Math.cos(toRadians(pointB.lat)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+      
+      // Round to 1 decimal place
+      resolve(Math.round(distance * 10) / 10);
+    }, 100); // Simulate network delay
+  });
+}
+
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
 }

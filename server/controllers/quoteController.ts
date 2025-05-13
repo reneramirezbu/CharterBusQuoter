@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { storage } from '../storage';
 import { calculateQuote } from '../services/pricingService';
-import { QuoteRequest, QuoteResponse } from '@shared/schema';
-import { v4 as uuidv4 } from 'uuid';
+import { quoteRequestSchema, QuoteRequest } from '../../shared/schema';
+import { storage } from '../storage';
+import { ZodError } from 'zod';
 
 /**
  * Calculate and generate a quote
@@ -12,33 +12,44 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export const generateQuote = async (req: Request, res: Response) => {
   try {
-    const quoteRequest = req.body as QuoteRequest;
+    // Validate request body against schema
+    const quoteRequest = quoteRequestSchema.parse(req.body) as QuoteRequest;
+
+    // Additional validation
+    const validationErrors = validateQuoteRequest(quoteRequest);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        errors: validationErrors
+      });
+    }
+
+    // Calculate quote
+    const quoteResponse = await calculateQuote(quoteRequest);
     
-    // Additional validation beyond schema checks
-    if (!quoteRequest.pickupLocation?.placeId || !quoteRequest.dropoffLocation?.placeId) {
-      return res.status(400).json({ 
-        message: 'Invalid location data',
-        details: 'Both pickup and dropoff locations must have valid Google Place IDs'
+    // Save quote to storage
+    await storage.saveQuote(quoteResponse);
+    
+    // Return the quote response
+    return res.status(200).json(quoteResponse);
+  } catch (error) {
+    console.error('Error generating quote:', error);
+    
+    // Handle ZodError (validation error)
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        success: false,
+        errors: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
       });
     }
     
-    // Calculate the quote using the pricing service
-    const quoteResponse = calculateQuote(quoteRequest);
-    
-    // Save the quote in storage for later retrieval
-    await storage.saveQuote(quoteResponse);
-    
-    // Return the successful quote to the client
-    res.status(200).json(quoteResponse);
-  } catch (error: any) {
-    console.error('Error generating quote:', error);
-    
-    // Determine the appropriate status code based on the error
-    const statusCode = error.type === 'validation' ? 400 : 500;
-    
-    res.status(statusCode).json({ 
-      message: 'Error generating quote', 
-      error: error.message 
+    // Handle other errors
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred while generating your quote.'
     });
   }
 };
@@ -53,37 +64,120 @@ export const getQuoteById = async (req: Request, res: Response) => {
   try {
     const { quoteId } = req.params;
     
-    if (!quoteId || typeof quoteId !== 'string' || quoteId.trim() === '') {
-      return res.status(400).json({ message: 'Invalid quote ID' });
+    if (!quoteId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Quote ID is required'
+      });
     }
     
-    // Retrieve the quote from storage
+    // Retrieve quote from storage
     const quote = await storage.getQuote(quoteId);
     
     if (!quote) {
-      return res.status(404).json({ 
-        message: 'Quote not found',
-        details: 'The requested quote could not be found or may have been deleted'
+      return res.status(404).json({
+        success: false,
+        message: 'Quote not found'
       });
     }
     
     // Check if quote has expired
-    const expiryDate = new Date(quote.expiresAt);
-    if (expiryDate < new Date()) {
-      return res.status(410).json({ 
-        message: 'Quote has expired',
-        expiredAt: expiryDate,
-        details: 'Quotes are valid for 24 hours after generation'
+    const expirationDate = new Date(quote.expiresAt);
+    if (expirationDate < new Date()) {
+      return res.status(410).json({
+        success: false,
+        message: 'Quote has expired'
       });
     }
     
-    // Return the valid quote
-    res.status(200).json(quote);
-  } catch (error: any) {
+    // Return the quote
+    return res.status(200).json(quote);
+  } catch (error) {
     console.error('Error retrieving quote:', error);
-    res.status(500).json({ 
-      message: 'Error retrieving quote', 
-      error: error.message 
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred while retrieving the quote.'
     });
   }
 };
+
+/**
+ * Additional validation for quote requests
+ * 
+ * This function performs additional validation on the quote request beyond
+ * what the Zod schema can validate.
+ */
+function validateQuoteRequest(quoteRequest: QuoteRequest): Array<{field: string, message: string}> {
+  const errors: Array<{field: string, message: string}> = [];
+  
+  // Validate dates
+  const currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  
+  const departureDate = new Date(quoteRequest.departureDate);
+  departureDate.setHours(0, 0, 0, 0);
+  
+  if (departureDate < currentDate) {
+    errors.push({
+      field: 'departureDate',
+      message: 'Departure date cannot be in the past'
+    });
+  }
+  
+  // Validate return date for round trips
+  if (quoteRequest.tripType === 'roundTrip' && quoteRequest.returnDate) {
+    const returnDate = new Date(quoteRequest.returnDate);
+    returnDate.setHours(0, 0, 0, 0);
+    
+    if (returnDate < departureDate) {
+      errors.push({
+        field: 'returnDate',
+        message: 'Return date must be after departure date'
+      });
+    }
+  }
+  
+  // Validate passenger count
+  if (quoteRequest.numPassengers < 1) {
+    errors.push({
+      field: 'numPassengers',
+      message: 'Number of passengers must be at least 1'
+    });
+  }
+  
+  if (quoteRequest.numPassengers > 100) {
+    errors.push({
+      field: 'numPassengers',
+      message: 'Number of passengers cannot exceed 100'
+    });
+  }
+  
+  // Validate locations
+  if (!quoteRequest.pickupLocation.placeId) {
+    errors.push({
+      field: 'pickupLocation',
+      message: 'Valid pickup location is required'
+    });
+  }
+  
+  if (!quoteRequest.dropoffLocation.placeId) {
+    errors.push({
+      field: 'dropoffLocation',
+      message: 'Valid dropoff location is required'
+    });
+  }
+  
+  // Validate pickup and dropoff are not the same
+  if (
+    quoteRequest.pickupLocation.placeId &&
+    quoteRequest.dropoffLocation.placeId &&
+    quoteRequest.pickupLocation.placeId === quoteRequest.dropoffLocation.placeId
+  ) {
+    errors.push({
+      field: 'dropoffLocation',
+      message: 'Pickup and dropoff locations cannot be the same'
+    });
+  }
+  
+  return errors;
+}

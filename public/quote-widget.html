@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charter Bus Quote Widget</title>
+  <style>
+    /* Reset and Base Styles */
+    .charter-quote-widget * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    .charter-quote-widget {
+      max-width: 100%;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    
+    /* Form elements */
+    .charter-quote-form {
+      padding: 1.5rem;
+    }
+    
+    .form-step {
+      display: none;
+    }
+    
+    .form-step.active {
+      display: block;
+    }
+    
+    .form-row {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: #4a5568;
+    }
+    
+    .form-control {
+      display: block;
+      width: 100%;
+      padding: 0.625rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      outline: none;
+    }
+    
+    .form-control:focus {
+      border-color: #3182ce;
+      box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+    }
+    
+    .error-message {
+      color: #e53e3e;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+    
+    /* Location Controls */
+    .location-input {
+      position: relative;
+    }
+    
+    .location-input i {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a0aec0;
+    }
+    
+    .location-input input {
+      padding-left: 2.5rem;
+    }
+    
+    .location-preview {
+      background-color: #f7fafc;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      display: none;
+    }
+    
+    .location-preview.active {
+      display: block;
+    }
+    
+    /* Trip Type Options */
+    .trip-type-options {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .trip-option {
+      flex: 1;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    
+    .trip-option.selected {
+      border-color: #3182ce;
+      background-color: #ebf8ff;
+    }
+    
+    /* Bus Type Options */
+    .bus-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .bus-options {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .bus-option {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      cursor: pointer;
+    }
+    
+    .bus-option.selected {
+      border-color: #3182ce;
+      background-color: #ebf8ff;
+    }
+    
+    .bus-option h4 {
+      margin: 0 0 0.5rem 0;
+      color: #2d3748;
+    }
+    
+    .bus-option p {
+      margin: 0;
+      color: #718096;
+      font-size: 0.875rem;
+    }
+    
+    /* Amenities */
+    .amenities-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    
+    @media (min-width: 768px) {
+      .amenities-options {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+    
+    .amenity-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .amenity-option label {
+      margin: 0;
+      font-weight: normal;
+      cursor: pointer;
+    }
+    
+    /* Progress Bar */
+    .progress-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    
+    .progress-bar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: #e2e8f0;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+    
+    .progress-step {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background-color: #e2e8f0;
+      color: #a0aec0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .progress-step.active {
+      background-color: #3182ce;
+      color: white;
+    }
+    
+    .progress-step.completed {
+      background-color: #48bb78;
+      color: white;
+    }
+    
+    /* Navigation Buttons */
+    .form-navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+    }
+    
+    .btn {
+      background-color: #3182ce;
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background-color: #2c5282;
+    }
+    
+    .btn-secondary {
+      background-color: white;
+      color: #4a5568;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #f7fafc;
+    }
+    
+    /* Quote Results */
+    .quote-result {
+      padding: 1.5rem;
+    }
+    
+    .quote-result-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .quote-result-icon {
+      width: 3rem;
+      height: 3rem;
+      background-color: #c6f6d5;
+      color: #38a169;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.5rem;
+    }
+    
+    .quote-result-title {
+      font-size: 1.5rem;
+      color: #2d3748;
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+    }
+    
+    .quote-result-description {
+      color: #718096;
+      margin: 0;
+    }
+    
+    .trip-summary {
+      background-color: #f7fafc;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .trip-detail {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    
+    .trip-detail-icon {
+      color: #3182ce;
+      margin-right: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    
+    .trip-detail-content {
+      flex: 1;
+    }
+    
+    .trip-detail-label {
+      font-size: 0.75rem;
+      color: #718096;
+      margin: 0;
+    }
+    
+    .trip-detail-value {
+      color: #2d3748;
+      margin: 0;
+    }
+    
+    .quote-breakdown {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    
+    .quote-breakdown-header {
+      background-color: #f7fafc;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .quote-breakdown-title {
+      margin: 0;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 1rem;
+    }
+    
+    .quote-breakdown-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .quote-breakdown-item:last-child {
+      border-bottom: none;
+    }
+    
+    .quote-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .quote-item-label {
+      color: #2d3748;
+      font-weight: 500;
+      margin: 0;
+    }
+    
+    .quote-item-description {
+      color: #718096;
+      font-size: 0.75rem;
+      margin: 0.25rem 0 0 0;
+    }
+    
+    .quote-item-value {
+      color: #2d3748;
+      font-weight: 500;
+    }
+    
+    .quote-total {
+      background-color: #f7fafc;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .quote-total-label {
+      font-weight: 600;
+      color: #2d3748;
+      margin: 0;
+    }
+    
+    .quote-total-value {
+      font-weight: 700;
+      color: #3182ce;
+      font-size: 1.25rem;
+      margin: 0;
+    }
+    
+    /* Loading Spinner */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+    
+    .loading-overlay.active {
+      display: flex;
+    }
+    
+    .spinner {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid #e2e8f0;
+      border-top-color: #3182ce;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Grid */
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+    
+    @media (min-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .grid-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    /* Remix icons - Font Icons */
+    .ri-arrow-left-line:before { content: "\ea64"; }
+    .ri-arrow-right-line:before { content: "\ea6e"; }
+    .ri-map-pin-line:before { content: "\eef5"; }
+    .ri-map-pin-fill:before { content: "\eef4"; }
+    .ri-calendar-line:before { content: "\eb22"; }
+    .ri-bus-line:before { content: "\eb1d"; }
+    .ri-user-line:before { content: "\f25f"; }
+    .ri-settings-line:before { content: "\f0ce"; }
+    .ri-check-line:before { content: "\eb7b"; }
+    
+    @font-face {
+      font-family: 'remixicon';
+      src: url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.woff2') format('woff2');
+      font-display: swap;
+    }
+    
+    i[class^="ri-"], i[class*=" ri-"] {
+      font-family: 'remixicon' !important;
+      font-style: normal;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body>
+  <div id="charter-quote-widget" class="charter-quote-widget">
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+    </div>
+    
+    <form id="charter-quote-form" class="charter-quote-form">
+      <!-- Progress Steps -->
+      <div class="progress-bar">
+        <div class="progress-step active" data-step="1">1</div>
+        <div class="progress-step" data-step="2">2</div>
+        <div class="progress-step" data-step="3">3</div>
+      </div>
+      
+      <!-- Step 1: Trip Details -->
+      <div id="step-1" class="form-step active">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Trip Type</label>
+            <div class="trip-type-options">
+              <div class="trip-option selected" data-trip-type="oneWay">
+                <span>One Way</span>
+              </div>
+              <div class="trip-option" data-trip-type="roundTrip">
+                <span>Round Trip</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row grid grid-2">
+          <div class="form-group">
+            <label for="numPassengers">Number of Passengers</label>
+            <input type="number" id="numPassengers" class="form-control" min="1" max="100" value="1" required>
+            <div class="error-message" id="numPassengers-error"></div>
+          </div>
+          
+          <div class="form-group" id="returnDateGroup" style="display:none;">
+            <label for="returnDate">Return Date</label>
+            <input type="date" id="returnDate" class="form-control" required>
+            <div class="error-message" id="returnDate-error"></div>
+          </div>
+        </div>
+        
+        <div class="form-row grid grid-2">
+          <div class="form-group">
+            <label for="departureDate">Departure Date</label>
+            <input type="date" id="departureDate" class="form-control" required>
+            <div class="error-message" id="departureDate-error"></div>
+          </div>
+          
+          <div class="form-group">
+            <label for="departureTime">Departure Time</label>
+            <input type="time" id="departureTime" class="form-control" required>
+            <div class="error-message" id="departureTime-error"></div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pickupLocation">Pickup Location</label>
+            <div class="location-input">
+              <i class="ri-map-pin-line"></i>
+              <input type="text" id="pickupLocation" class="form-control" placeholder="Enter pickup address" required>
+            </div>
+            <div class="error-message" id="pickupLocation-error"></div>
+            <div id="pickupLocationPreview" class="location-preview">
+              <i class="ri-map-pin-fill"></i>
+              <span id="pickupLocationText"></span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dropoffLocation">Dropoff Location</label>
+            <div class="location-input">
+              <i class="ri-map-pin-line"></i>
+              <input type="text" id="dropoffLocation" class="form-control" placeholder="Enter destination address" required>
+            </div>
+            <div class="error-message" id="dropoffLocation-error"></div>
+            <div id="dropoffLocationPreview" class="location-preview">
+              <i class="ri-map-pin-fill"></i>
+              <span id="dropoffLocationText"></span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-navigation">
+          <div></div> <!-- Empty div for spacing -->
+          <button type="button" id="step1Next" class="btn">
+            Continue
+            <i class="ri-arrow-right-line"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Step 2: Bus Options -->
+      <div id="step-2" class="form-step">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Select Bus Type</label>
+            <div class="bus-options">
+              <div class="bus-option selected" data-bus-type="standard">
+                <h4>Standard Charter Bus</h4>
+                <p>Comfortable seating for up to 56 passengers with essential amenities</p>
+              </div>
+              <div class="bus-option" data-bus-type="luxury">
+                <h4>Luxury Charter Bus</h4>
+                <p>Premium experience with spacious seating and enhanced amenities</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Additional Amenities</label>
+            <div class="amenities-options">
+              <div class="amenity-option">
+                <input type="checkbox" id="amenity-wifi" name="amenities" value="wifi">
+                <label for="amenity-wifi">WiFi</label>
+              </div>
+              <div class="amenity-option">
+                <input type="checkbox" id="amenity-lavatory" name="amenities" value="lavatory">
+                <label for="amenity-lavatory">Lavatory</label>
+              </div>
+              <div class="amenity-option">
+                <input type="checkbox" id="amenity-entertainment" name="amenities" value="entertainment">
+                <label for="amenity-entertainment">Entertainment</label>
+              </div>
+              <div class="amenity-option">
+                <input type="checkbox" id="amenity-power" name="amenities" value="powerOutlets">
+                <label for="amenity-power">Power Outlets</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-navigation">
+          <button type="button" id="step2Back" class="btn btn-secondary">
+            <i class="ri-arrow-left-line"></i>
+            Back
+          </button>
+          <button type="button" id="submitQuote" class="btn">
+            Get Quote
+            <i class="ri-arrow-right-line"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Step 3: Quote Summary -->
+      <div id="step-3" class="form-step">
+        <div class="quote-result">
+          <div class="quote-result-header">
+            <div class="quote-result-icon">
+              <i class="ri-check-line"></i>
+            </div>
+            <h3 class="quote-result-title">Your Quote Summary</h3>
+            <p class="quote-result-description">Here's a breakdown of your estimated charter bus price</p>
+          </div>
+          
+          <div class="trip-summary">
+            <div class="grid grid-2">
+              <div>
+                <div class="trip-detail">
+                  <div class="trip-detail-icon">
+                    <i class="ri-map-pin-line"></i>
+                  </div>
+                  <div class="trip-detail-content">
+                    <p class="trip-detail-label">Pickup Location</p>
+                    <p class="trip-detail-value" id="summary-pickup"></p>
+                  </div>
+                </div>
+                <div class="trip-detail">
+                  <div class="trip-detail-icon">
+                    <i class="ri-map-pin-line"></i>
+                  </div>
+                  <div class="trip-detail-content">
+                    <p class="trip-detail-label">Dropoff Location</p>
+                    <p class="trip-detail-value" id="summary-dropoff"></p>
+                  </div>
+                </div>
+                <div class="trip-detail">
+                  <div class="trip-detail-icon">
+                    <i class="ri-calendar-line"></i>
+                  </div>
+                  <div class="trip-detail-content">
+                    <p class="trip-detail-label">Date & Time</p>
+                    <p class="trip-detail-value" id="summary-datetime"></p>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="trip-detail">
+                  <div class="trip-detail-icon">
+                    <i class="ri-user-line"></i>
+                  </div>
+                  <div class="trip-detail-content">
+                    <p class="trip-detail-label">Passengers</p>
+                    <p class="trip-detail-value" id="summary-passengers"></p>
+                  </div>
+                </div>
+                <div class="trip-detail">
+                  <div class="trip-detail-icon">
+                    <i class="ri-bus-line"></i>
+                  </div>
+                  <div class="trip-detail-content">
+                    <p class="trip-detail-label">Bus Type</p>
+                    <p class="trip-detail-value" id="summary-bustype"></p>
+                  </div>
+                </div>
+                <div class="trip-detail">
+                  <div class="trip-detail-icon">
+                    <i class="ri-settings-line"></i>
+                  </div>
+                  <div class="trip-detail-content">
+                    <p class="trip-detail-label">Amenities</p>
+                    <p class="trip-detail-value" id="summary-amenities"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="quote-breakdown">
+            <div class="quote-breakdown-header">
+              <h4 class="quote-breakdown-title">Quote Breakdown</h4>
+            </div>
+            <div id="breakdown-items"></div>
+            <div class="quote-total">
+              <p class="quote-total-label">Total Estimated Price</p>
+              <p class="quote-total-value" id="quote-total"></p>
+            </div>
+          </div>
+          
+          <div class="form-navigation">
+            <button type="button" id="modifyQuote" class="btn btn-secondary">
+              <i class="ri-arrow-left-line"></i>
+              Modify Quote
+            </button>
+            <button type="button" id="requestBooking" class="btn" style="background-color: #38a169;">
+              Request Booking
+              <i class="ri-arrow-right-line"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Configuration - Replace with your API settings
+    const API_URL = 'YOUR_API_URL'; // E.g., 'https://your-charter-bus-api.com';
+    
+    // Your Google Maps API key is loaded from your WordPress backend
+    // or via the 'data-maps-api-key' attribute on the widget container
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      // State for the form data
+      let formData = {
+        tripType: 'oneWay',
+        numPassengers: 1,
+        departureDate: '',
+        departureTime: '',
+        returnDate: '',
+        pickupLocation: {
+          placeId: '',
+          formattedAddress: '',
+          addressInput: '',
+          lat: null,
+          lng: null
+        },
+        dropoffLocation: {
+          placeId: '',
+          formattedAddress: '',
+          addressInput: '',
+          lat: null,
+          lng: null
+        },
+        busType: 'standard',
+        amenities: []
+      };
+      
+      // Store quote response data
+      let quoteResponse = null;
+      
+      // Set minimum date to today
+      const today = new Date();
+      const todayFormatted = today.toISOString().split('T')[0];
+      document.getElementById('departureDate').min = todayFormatted;
+      document.getElementById('returnDate').min = todayFormatted;
+      
+      // Set up autocomplete for locations
+      let pickupAutocomplete, dropoffAutocomplete;
+      
+      // Initialize Google Places Autocomplete when the API is loaded
+      function initAutocomplete() {
+        if (!window.google || !window.google.maps || !window.google.maps.places) {
+          console.error('Google Maps API is not loaded');
+          return;
+        }
+        
+        const pickupInput = document.getElementById('pickupLocation');
+        const dropoffInput = document.getElementById('dropoffLocation');
+        
+        pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+          types: ['address'],
+          fields: ['place_id', 'formatted_address', 'geometry']
+        });
+        
+        dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+          types: ['address'],
+          fields: ['place_id', 'formatted_address', 'geometry']
+        });
+        
+        // Set up listeners
+        pickupAutocomplete.addListener('place_changed', function() {
+          const place = pickupAutocomplete.getPlace();
+          if (place && place.place_id) {
+            formData.pickupLocation = {
+              placeId: place.place_id,
+              formattedAddress: place.formatted_address || '',
+              addressInput: pickupInput.value,
+              lat: place.geometry?.location?.lat(),
+              lng: place.geometry?.location?.lng()
+            };
+            
+            // Show preview
+            document.getElementById('pickupLocationText').textContent = place.formatted_address;
+            document.getElementById('pickupLocationPreview').classList.add('active');
+            
+            // Hide error if any
+            document.getElementById('pickupLocation-error').style.display = 'none';
+          }
+        });
+        
+        dropoffAutocomplete.addListener('place_changed', function() {
+          const place = dropoffAutocomplete.getPlace();
+          if (place && place.place_id) {
+            formData.dropoffLocation = {
+              placeId: place.place_id,
+              formattedAddress: place.formatted_address || '',
+              addressInput: dropoffInput.value,
+              lat: place.geometry?.location?.lat(),
+              lng: place.geometry?.location?.lng()
+            };
+            
+            // Show preview
+            document.getElementById('dropoffLocationText').textContent = place.formatted_address;
+            document.getElementById('dropoffLocationPreview').classList.add('active');
+            
+            // Hide error if any
+            document.getElementById('dropoffLocation-error').style.display = 'none';
+          }
+        });
+        
+        // Clear preview when inputs are cleared
+        pickupInput.addEventListener('input', function() {
+          if (this.value === '') {
+            document.getElementById('pickupLocationPreview').classList.remove('active');
+            formData.pickupLocation = {
+              placeId: '',
+              formattedAddress: '',
+              addressInput: '',
+              lat: null,
+              lng: null
+            };
+          }
+        });
+        
+        dropoffInput.addEventListener('input', function() {
+          if (this.value === '') {
+            document.getElementById('dropoffLocationPreview').classList.remove('active');
+            formData.dropoffLocation = {
+              placeId: '',
+              formattedAddress: '',
+              addressInput: '',
+              lat: null,
+              lng: null
+            };
+          }
+        });
+      }
+      
+      // Check and initialize Google Maps API
+      if (window.google && window.google.maps && window.google.maps.places) {
+        initAutocomplete();
+      } else {
+        // The API might be loading, create a watcher
+        const checkInterval = setInterval(function() {
+          if (window.google && window.google.maps && window.google.maps.places) {
+            clearInterval(checkInterval);
+            initAutocomplete();
+          }
+        }, 100);
+        
+        // Set a timeout to stop checking
+        setTimeout(() => clearInterval(checkInterval), 10000);
+      }
+      
+      // Form validation
+      function validateStep1() {
+        let isValid = true;
+        const errors = {};
+        
+        // Check number of passengers
+        const numPassengers = parseInt(document.getElementById('numPassengers').value);
+        if (!numPassengers || numPassengers < 1 || numPassengers > 100) {
+          errors.numPassengers = 'Please enter a number between 1 and 100';
+          isValid = false;
+        }
+        
+        // Check departure date
+        const departureDate = document.getElementById('departureDate').value;
+        if (!departureDate) {
+          errors.departureDate = 'Please select a departure date';
+          isValid = false;
+        } else if (new Date(departureDate) < new Date(today.setHours(0,0,0,0))) {
+          errors.departureDate = 'Departure date cannot be in the past';
+          isValid = false;
+        }
+        
+        // Check departure time
+        const departureTime = document.getElementById('departureTime').value;
+        if (!departureTime) {
+          errors.departureTime = 'Please select a departure time';
+          isValid = false;
+        }
+        
+        // Check return date for round trips
+        if (formData.tripType === 'roundTrip') {
+          const returnDate = document.getElementById('returnDate').value;
+          if (!returnDate) {
+            errors.returnDate = 'Please select a return date';
+            isValid = false;
+          } else if (new Date(returnDate) < new Date(departureDate)) {
+            errors.returnDate = 'Return date must be after departure date';
+            isValid = false;
+          }
+        }
+        
+        // Check locations
+        if (!formData.pickupLocation.placeId) {
+          errors.pickupLocation = 'Please select a valid pickup location';
+          isValid = false;
+        }
+        
+        if (!formData.dropoffLocation.placeId) {
+          errors.dropoffLocation = 'Please select a valid dropoff location';
+          isValid = false;
+        }
+        
+        // Display errors
+        Object.keys(errors).forEach(field => {
+          const errorElement = document.getElementById(`${field}-error`);
+          if (errorElement) {
+            errorElement.textContent = errors[field];
+            errorElement.style.display = 'block';
+          }
+        });
+        
+        return isValid;
+      }
+      
+      // Trip type selection
+      document.querySelectorAll('.trip-option').forEach(option => {
+        option.addEventListener('click', function() {
+          // Update UI
+          document.querySelectorAll('.trip-option').forEach(el => el.classList.remove('selected'));
+          this.classList.add('selected');
+          
+          // Update data
+          formData.tripType = this.getAttribute('data-trip-type');
+          
+          // Show/hide return date
+          if (formData.tripType === 'roundTrip') {
+            document.getElementById('returnDateGroup').style.display = 'block';
+          } else {
+            document.getElementById('returnDateGroup').style.display = 'none';
+          }
+        });
+      });
+      
+      // Bus type selection
+      document.querySelectorAll('.bus-option').forEach(option => {
+        option.addEventListener('click', function() {
+          // Update UI
+          document.querySelectorAll('.bus-option').forEach(el => el.classList.remove('selected'));
+          this.classList.add('selected');
+          
+          // Update data
+          formData.busType = this.getAttribute('data-bus-type');
+        });
+      });
+      
+      // Handle form input changes
+      document.getElementById('numPassengers').addEventListener('input', function() {
+        formData.numPassengers = parseInt(this.value) || 1;
+        document.getElementById('numPassengers-error').style.display = 'none';
+      });
+      
+      document.getElementById('departureDate').addEventListener('change', function() {
+        formData.departureDate = this.value;
+        document.getElementById('departureDate-error').style.display = 'none';
+        
+        // Update min date for return
+        document.getElementById('returnDate').min = this.value;
+      });
+      
+      document.getElementById('departureTime').addEventListener('change', function() {
+        formData.departureTime = this.value;
+        document.getElementById('departureTime-error').style.display = 'none';
+      });
+      
+      document.getElementById('returnDate').addEventListener('change', function() {
+        formData.returnDate = this.value;
+        document.getElementById('returnDate-error').style.display = 'none';
+      });
+      
+      // Amenities checkboxes
+      document.querySelectorAll('input[name="amenities"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          if (this.checked) {
+            formData.amenities.push(this.value);
+          } else {
+            formData.amenities = formData.amenities.filter(a => a !== this.value);
+          }
+        });
+      });
+      
+      // Navigation between steps
+      document.getElementById('step1Next').addEventListener('click', function() {
+        if (validateStep1()) {
+          showStep(2);
+        }
+      });
+      
+      document.getElementById('step2Back').addEventListener('click', function() {
+        showStep(1);
+      });
+      
+      document.getElementById('modifyQuote').addEventListener('click', function() {
+        showStep(2);
+      });
+      
+      function showStep(stepNumber) {
+        // Hide all steps
+        document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+        
+        // Show the selected step
+        document.getElementById(`step-${stepNumber}`).classList.add('active');
+        
+        // Update progress bar
+        document.querySelectorAll('.progress-step').forEach(step => {
+          const stepNum = parseInt(step.getAttribute('data-step'));
+          
+          step.classList.remove('active', 'completed');
+          
+          if (stepNum === stepNumber) {
+            step.classList.add('active');
+          } else if (stepNum < stepNumber) {
+            step.classList.add('completed');
+          }
+        });
+      }
+      
+      // Submit quote request
+      document.getElementById('submitQuote').addEventListener('click', async function() {
+        // Show loading overlay
+        document.querySelector('.loading-overlay').classList.add('active');
+        
+        try {
+          // Make API request
+          const response = await fetch(`${API_URL}/api/quotes`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
+          }
+          
+          quoteResponse = await response.json();
+          
+          // Update summary
+          updateQuoteSummary(quoteResponse);
+          
+          // Show step 3
+          showStep(3);
+        } catch (error) {
+          console.error('Error generating quote:', error);
+          alert('Sorry, there was an error generating your quote. Please try again later.');
+        } finally {
+          // Hide loading overlay
+          document.querySelector('.loading-overlay').classList.remove('active');
+        }
+      });
+      
+      // Handle booking request
+      document.getElementById('requestBooking').addEventListener('click', function() {
+        if (!quoteResponse || !quoteResponse.quoteId) {
+          alert('Something went wrong with your quote. Please try again.');
+          return;
+        }
+        
+        const subject = encodeURIComponent(`Charter Bus Quote ${quoteResponse.quoteId}`);
+        const body = encodeURIComponent(`I would like to book the charter bus quote with ID: ${quoteResponse.quoteId}`);
+        
+        window.location.href = `mailto:booking@example.com?subject=${subject}&body=${body}`;
+      });
+      
+      // Format functions
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD'
+        }).format(amount);
+      }
+      
+      function formatDate(dateStr, timeStr) {
+        const options = {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        };
+        
+        const date = new Date(dateStr);
+        let formatted = date.toLocaleDateString('en-US', options);
+        
+        if (timeStr) {
+          formatted += ` at ${formatTime(timeStr)}`;
+        }
+        
+        return formatted;
+      }
+      
+      function formatTime(timeStr) {
+        const [hours, minutes] = timeStr.split(':');
+        const date = new Date();
+        date.setHours(parseInt(hours));
+        date.setMinutes(parseInt(minutes));
+        
+        return date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+      }
+      
+      function formatBusType(busType) {
+        return busType === 'luxury' ? 'Luxury Charter Bus' : 'Standard Charter Bus';
+      }
+      
+      function formatAmenities(amenities) {
+        if (!amenities || amenities.length === 0) {
+          return 'None selected';
+        }
+        
+        return amenities.map(amenity => {
+          switch (amenity) {
+            case 'wifi': return 'WiFi';
+            case 'lavatory': return 'Lavatory';
+            case 'entertainment': return 'Entertainment';
+            case 'powerOutlets': return 'Power Outlets';
+            default: return amenity;
+          }
+        }).join(', ');
+      }
+      
+      // Update quote summary
+      function updateQuoteSummary(quote) {
+        const tripDetails = quote.tripDetails;
+        
+        // Trip details
+        document.getElementById('summary-pickup').textContent = tripDetails.pickupLocation.formattedAddress;
+        document.getElementById('summary-dropoff').textContent = tripDetails.dropoffLocation.formattedAddress;
+        
+        // Date and time
+        let dateTimeText = formatDate(tripDetails.departureDate, tripDetails.departureTime);
+        if (tripDetails.tripType === 'roundTrip' && tripDetails.returnDate) {
+          dateTimeText += ` (Return: ${formatDate(tripDetails.returnDate)})`;
+        }
+        document.getElementById('summary-datetime').textContent = dateTimeText;
+        
+        // Other details
+        document.getElementById('summary-passengers').textContent = tripDetails.numPassengers;
+        document.getElementById('summary-bustype').textContent = formatBusType(tripDetails.busType);
+        document.getElementById('summary-amenities').textContent = formatAmenities(tripDetails.amenities);
+        
+        // Breakdown items
+        const breakdownContainer = document.getElementById('breakdown-items');
+        breakdownContainer.innerHTML = '';
+        
+        quote.breakdown.forEach(item => {
+          const itemElement = document.createElement('div');
+          itemElement.className = 'quote-breakdown-item';
+          
+          itemElement.innerHTML = `
+            <div class="quote-item-row">
+              <div>
+                <p class="quote-item-label">${item.name}</p>
+                <p class="quote-item-description">${item.description}</p>
+              </div>
+              <div class="quote-item-value">
+                ${item.multiplier ? `x${item.multiplier}` : formatCurrency(item.amount)}
+              </div>
+            </div>
+          `;
+          
+          breakdownContainer.appendChild(itemElement);
+        });
+        
+        // Service fee
+        const feeElement = document.createElement('div');
+        feeElement.className = 'quote-breakdown-item';
+        feeElement.innerHTML = `
+          <div class="quote-item-row">
+            <div>
+              <p class="quote-item-label">Service Fee</p>
+              <p class="quote-item-description">Administrative and service fees</p>
+            </div>
+            <div class="quote-item-value">${formatCurrency(quote.serviceFee)}</div>
+          </div>
+        `;
+        breakdownContainer.appendChild(feeElement);
+        
+        // Total
+        document.getElementById('quote-total').textContent = formatCurrency(quote.total);
+      }
+    });
+  </script>
+</body>
+</html>

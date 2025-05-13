@@ -1,0 +1,36 @@
+Title: Extract & Harden Quote-Estimator Widget for Elementor
+
+Description:
+I need to strip out everything except my core quote-estimator and deliver it as a lightweight widget I can drop into an Elementor-built WordPress page.
+
+**Your mission (STRICTLY):**  
+1. **Remove all site scaffolding**  
+   - No header, no menu, no footer, no “Why Choose Us,” testimonials, or any other page sections.  
+   - Deliver **only** the quote form and its minimal styles.  
+
+2. **Backend (Node/Express)**  
+   - Refactor **only** the `/api/quotes` route, its controller, and `pricingService`.  
+   - Convert any callbacks or mock data to clean `async/await`.  
+   - Add robust input validation (dates, passenger counts, distances).  
+   - Scope CORS to `https://your-wordpress-domain.com`.  
+
+3. **Frontend (vanilla HTML/JS)**  
+   - Produce a single `quote-widget.html` (and optional `quote-widget.js`) that:  
+     - Renders the form fields: date, time, #passengers, bus type, amenities.  
+     - Implements Google Places Autocomplete for pickup/drop-off inputs (with API key via env).  
+     - POSTs JSON to `https://your-api-domain.com/api/quotes` and displays the returned breakdown & total.  
+   - Include only the CSS needed to make the widget look clean when embedded in Elementor—no frameworks or extra styles.  
+
+4. **WordPress/Elementor integration**  
+   - In your README, show exactly how to:  
+     - Upload the `quote-widget.html` (and JS) to my WP assets.  
+     - Insert it via an Elementor HTML or Shortcode widget on any page.  
+
+**Deliverables:**  
+- A Replit (or GitHub) project containing only:  
+  - Refactored `server.js` (quotes route/controller/service)  
+  - `quote-widget.html` (+ optional `quote-widget.js`)  
+  - `.env.example` with `PORT`, `MONGO_URI`, `GOOGLE_API_KEY`, `FRONTEND_URL`  
+- README with local run steps and Elementor embedding instructions  
+
+**IMPORTANT:** Focus **solely** on the standalone quote-estimator widget—remove all other site sections and styling.  

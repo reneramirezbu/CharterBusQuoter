@@ -62,6 +62,7 @@ export const quoteResponseSchema = z.object({
   subtotal: z.number(),
   serviceFee: z.number(),
   total: z.number(),
+  createdAt: z.string(),
   expiresAt: z.string(),
 });
 

@@ -1,0 +1,230 @@
+/**
+ * Charter Bus Quote Widget Styles
+ * 
+ * These styles are the bare minimum required for the Charter Bus Quote Widget
+ * to function properly when embedded in other sites.
+ */
+
+/* Reset some basic elements */
+#charter-bus-quote-widget * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Main widget container */
+#charter-bus-quote-widget {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: #333;
+  line-height: 1.5;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Widget card */
+.charter-bus-quote-widget {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Typography */
+.charter-bus-quote-widget h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #1a202c;
+}
+
+.charter-bus-quote-widget p {
+  margin-bottom: 1rem;
+  color: #4a5568;
+}
+
+.charter-bus-quote-widget label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+}
+
+/* Form elements */
+.charter-bus-quote-widget input,
+.charter-bus-quote-widget select,
+.charter-bus-quote-widget textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.charter-bus-quote-widget input:focus,
+.charter-bus-quote-widget select:focus,
+.charter-bus-quote-widget textarea:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+/* Buttons */
+.charter-bus-quote-widget button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.charter-bus-quote-widget button.primary {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+}
+
+.charter-bus-quote-widget button.primary:hover {
+  background-color: #1d4ed8;
+}
+
+.charter-bus-quote-widget button.secondary {
+  background-color: white;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.charter-bus-quote-widget button.secondary:hover {
+  background-color: #f9fafb;
+}
+
+/* Grid layout */
+.charter-bus-quote-widget .grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.charter-bus-quote-widget .grid-2 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 640px) {
+  .charter-bus-quote-widget .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Steps */
+.charter-bus-quote-widget .steps {
+  display: flex;
+  margin-bottom: 2rem;
+  justify-content: space-between;
+}
+
+.charter-bus-quote-widget .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.charter-bus-quote-widget .step-number {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  z-index: 10;
+}
+
+.charter-bus-quote-widget .step.active .step-number {
+  background-color: #2563eb;
+  color: white;
+}
+
+.charter-bus-quote-widget .step-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.charter-bus-quote-widget .step.active .step-label {
+  color: #2563eb;
+  font-weight: 500;
+}
+
+/* Form steps and progress */
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+}
+
+.progress-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #e2e8f0;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.progress-step {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #a0aec0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-step.active {
+  background-color: #3182ce;
+  color: white;
+}
+
+.progress-step.completed {
+  background-color: #48bb78;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .charter-bus-quote-widget {
+    padding: 1rem;
+  }
+  
+  .charter-bus-quote-widget .step-label {
+    display: none;
+  }
+}
+
+/* Add remixicons font */
+@import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
