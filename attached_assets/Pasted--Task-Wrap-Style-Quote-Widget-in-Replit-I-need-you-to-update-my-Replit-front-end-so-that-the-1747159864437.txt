@@ -1,0 +1,78 @@
+🚀 Task: Wrap & Style Quote Widget in Replit
+
+I need you to update my Replit front-end so that the standalone quote form is properly scoped and styled. Please do the following:
+
+1. **Wrap the form**  
+   - Open the HTML file where the quote form lives (e.g. `public/index.html` or `quote-widget.html`).  
+   - Enclose the entire `<form>` and its related markup inside a single container:  
+     ```html
+     <div id="charter-quote-widget" class="charter-quote-widget">
+       <!-- existing form markup -->
+     </div>
+     ```  
+   - Make sure nothing else (headers, footers, testimonials) remains outside that wrapper.
+
+2. **Add scoped CSS**  
+   - Create a new CSS file at `public/quote-widget.css` containing only the styles below:  
+     ```css
+     /* quote-widget.css */
+     .charter-quote-widget {
+       max-width: 600px;
+       margin: 0 auto;
+       font-family: inherit;
+       color: #333;
+     }
+     .charter-quote-widget h2 {
+       font-size: 1.8rem;
+       margin-bottom: 1rem;
+       text-align: center;
+     }
+     .charter-quote-widget form {
+       background: #fff;
+       padding: 1.5rem;
+       border-radius: 8px;
+       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+     }
+     .charter-quote-widget label {
+       display: block;
+       margin-bottom: 0.25rem;
+       font-weight: 600;
+     }
+     .charter-quote-widget input,
+     .charter-quote-widget select,
+     .charter-quote-widget button {
+       width: 100%;
+       padding: 0.5rem;
+       margin-bottom: 1rem;
+       border: 1px solid #ccc;
+       border-radius: 4px;
+       font-size: 1rem;
+     }
+     .charter-quote-widget button {
+       background: #0066cc;
+       color: #fff;
+       border: none;
+       cursor: pointer;
+       transition: background 0.2s;
+     }
+     .charter-quote-widget button:hover {
+       background: #005bb5;
+     }
+     .charter-quote-widget .results {
+       margin-top: 1.5rem;
+       padding: 1rem;
+       border-radius: 6px;
+       background: #f9f9f9;
+       font-size: 1.1rem;
+     }
+     ```
+   - In your HTML, add a link to this file **above** the widget wrapper:
+     ```html
+     <link rel="stylesheet" href="/quote-widget.css">
+     ```
+
+3. **Verify**  
+   - Redeploy the Replit and confirm that only the quote form (inside `#charter-quote-widget`) appears, styled per the above CSS.
+   - Ensure no header, footer, or other site sections are present.
+
+That’s it—after this, I can grab the HTML/JS and CSS files and embed them into my Elementor page. Thanks!  
