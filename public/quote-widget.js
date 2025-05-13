@@ -64,13 +64,46 @@ function toggleReturnDateFields() {
 function handleSubmit(event) {
   event.preventDefault();
   
-  // Show a simple alert for demonstration purposes
-  alert('Quote request submitted. In a real implementation, this would make an API call to generate a quote.');
+  // Collect form data
+  const formData = {
+    tripType: document.getElementById('trip-type').value,
+    pickupLocation: document.getElementById('pickup-location').value,
+    dropoffLocation: document.getElementById('dropoff-location').value,
+    departureDate: document.getElementById('departure-date').value,
+    departureTime: document.getElementById('departure-time').value,
+    passengerCount: document.getElementById('passenger-count').value
+  };
   
-  // In a real implementation, you would:
-  // 1. Collect form data
-  // 2. Make an API call to your backend
-  // 3. Display the result to the user
+  // If round-trip, add return date/time
+  if (formData.tripType === 'round-trip') {
+    formData.returnDate = document.getElementById('return-date').value;
+    formData.returnTime = document.getElementById('return-time').value;
+  }
+  
+  console.log('Quote request data:', formData);
+  
+  // In a real implementation, this would be an API call
+  // For now, just show a success message without an alert popup
+  const quoteForm = document.getElementById('charter-quote-form');
+  
+  // Create a success message element if it doesn't exist
+  let successMessage = document.getElementById('quote-success-message');
+  if (!successMessage) {
+    successMessage = document.createElement('div');
+    successMessage.id = 'quote-success-message';
+    successMessage.className = 'results';
+    successMessage.innerHTML = `
+      <h3>Quote Request Submitted</h3>
+      <p>Thank you for your request. In a real implementation, this would generate a quote based on your trip details.</p>
+    `;
+    
+    // Add it after the form
+    quoteForm.parentNode.insertBefore(successMessage, quoteForm.nextSibling);
+  }
+  
+  // Hide the form, show the success message
+  quoteForm.style.display = 'none';
+  successMessage.style.display = 'block';
 }
 
 // Set up event listeners when the page loads
