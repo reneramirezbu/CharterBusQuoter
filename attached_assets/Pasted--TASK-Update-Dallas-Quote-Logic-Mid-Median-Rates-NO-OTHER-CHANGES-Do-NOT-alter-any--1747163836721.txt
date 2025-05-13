@@ -1,0 +1,59 @@
+🚀 TASK: Update Dallas Quote Logic (Mid‑Median Rates) — NO OTHER CHANGES 🚀
+
+**Do NOT** alter any styles, CSS files, HTML structure, or UI aesthetics.  
+Only touch the pricing logic in the backend and ensure the front‑end displays the new numbers. Everything else must remain exactly as‑is.
+
+────────────────────────────────────────
+BACKEND – constants & algorithm
+────────────────────────────────────────
+Replace the pricing constants with:
+
+const FLAT_BOOKING_FEE      = 125;     // $
+const HOURLY_RATE           = 160;     // $/hr  (≤10 hrs)
+const OVERTIME_MULTIPLIER   = 1.5;     // 1.5× after threshold
+const OVERTIME_THRESHOLD_HR = 10;      // hrs
+const PER_MILE_RATE         = 5.00;    // $/mile
+const FUEL_SURCHARGE_PCT    = 0.10;    // 10 %
+const FUEL_SURCHARGE_TRIGGER_MILES = 250;
+const TOLL_RATE_PER_MILE    = 0.20;    // $/mile
+
+Algorithm (unchanged structure):
+
+1. baseTransportFee = FLAT_BOOKING_FEE  
+   + (durationHours × HOURLY_RATE)  
+   + (distanceMiles × PER_MILE_RATE)
+
+2. overtimeHours = max(0, durationHours – OVERTIME_THRESHOLD_HR)  
+   waitingTimeFee = overtimeHours × HOURLY_RATE × OVERTIME_MULTIPLIER
+
+3. fuelSurcharge = distanceMiles > FUEL_SURCHARGE_TRIGGER_MILES  
+   ? baseTransportFee × FUEL_SURCHARGE_PCT : 0
+
+4. estimatedTollsPermits = distanceMiles × TOLL_RATE_PER_MILE
+
+5. totalMin  = baseTransportFee + fuelSurcharge + estimatedTollsPermits  
+   totalMax = totalMin + waitingTimeFee
+
+Return JSON:
+{
+  baseTransportFee,
+  waitingTimeFee,
+  fuelSurcharge,
+  estimatedTollsPermits,
+  totalMin,
+  totalMax
+}
+
+────────────────────────────────────────
+FRONTEND – data mapping only
+────────────────────────────────────────
+• Keep all existing CSS/HTML untouched.  
+• Continue populating the same <span> IDs (`fee-base`, `fee-waiting`, etc.) with the new response values.
+
+────────────────────────────────────────
+QA
+────────────────────────────────────────
+• 5 hr / 150 mi  → expect ≈ $2,000–$2,200 range  
+• 10 hr / 300 mi → expect ≈ $4,600–$5,400 range  
+
+✅ No other files, styles, or assets should change. Commit & redeploy when the numbers update and the UI looks identical to current.

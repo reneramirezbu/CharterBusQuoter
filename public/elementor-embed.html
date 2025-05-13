@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charter Bus Quote Widget for Elementor</title>
+  <style>
+    /* Basic reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      padding: 20px;
+    }
+    .instructions {
+      max-width: 800px;
+      margin: 0 auto 40px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #0066cc;
+    }
+    .instructions h1 {
+      margin-bottom: 20px;
+      color: #0066cc;
+    }
+    .instructions code {
+      background: #e9ecef;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    .code-block {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      overflow-x: auto;
+      font-family: monospace;
+    }
+    .widget-container {
+      margin-top: 30px;
+      border-top: 1px solid #ddd;
+      padding-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="instructions">
+    <h1>Charter Bus Quote Widget for Elementor</h1>
+    <p>Below is the complete HTML/CSS/JS code that you need to copy into a Custom HTML block in Elementor:</p>
+    
+    <div class="code-block">
+      <pre><code>&lt;!-- COPY EVERYTHING BETWEEN THESE COMMENTS INTO ELEMENTOR HTML WIDGET --&gt;
+
+&lt;link rel="stylesheet" href="https://5b1fb1ef-57ab-4414-885e-617b0bf0ea1a-00-10c3582iw18b8.janeway.replit.dev/quote-widget.css"&gt;
+
+&lt;div id="charter-quote-widget" class="charter-quote-widget"&gt;
+  &lt;h2&gt;Charter Bus Quote&lt;/h2&gt;
+  
+  &lt;form id="charter-quote-form"&gt;
+    &lt;div class="form-group"&gt;
+      &lt;label for="trip-type"&gt;Trip Type&lt;/label&gt;
+      &lt;select id="trip-type" name="tripType" required&gt;
+        &lt;option value=""&gt;Select Trip Type&lt;/option&gt;
+        &lt;option value="one-way"&gt;One Way&lt;/option&gt;
+        &lt;option value="round-trip"&gt;Round Trip&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="form-group"&gt;
+      &lt;label for="pickup-location"&gt;Pickup Location&lt;/label&gt;
+      &lt;input type="text" id="pickup-location" name="pickupLocation" placeholder="Enter pickup address" required&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="form-group"&gt;
+      &lt;label for="dropoff-location"&gt;Dropoff Location&lt;/label&gt;
+      &lt;input type="text" id="dropoff-location" name="dropoffLocation" placeholder="Enter dropoff address" required&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="form-group"&gt;
+      &lt;label for="departure-date"&gt;Departure Date&lt;/label&gt;
+      &lt;input type="date" id="departure-date" name="departureDate" required&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="form-group"&gt;
+      &lt;label for="departure-time"&gt;Departure Time&lt;/label&gt;
+      &lt;input type="time" id="departure-time" name="departureTime" required&gt;
+    &lt;/div&gt;
+    
+    &lt;div id="return-date-container" style="display: none;"&gt;
+      &lt;div class="form-group"&gt;
+        &lt;label for="return-date"&gt;Return Date&lt;/label&gt;
+        &lt;input type="date" id="return-date" name="returnDate"&gt;
+      &lt;/div&gt;
+      
+      &lt;div class="form-group"&gt;
+        &lt;label for="return-time"&gt;Return Time&lt;/label&gt;
+        &lt;input type="time" id="return-time" name="returnTime"&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="form-group"&gt;
+      &lt;label for="passenger-count"&gt;Number of Passengers&lt;/label&gt;
+      &lt;input type="number" id="passenger-count" name="passengerCount" min="1" required&gt;
+    &lt;/div&gt;
+    
+    &lt;button type="submit"&gt;Get Quote&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+document.addEventListener('DOMContentLoaded', function() {
+  // Load Google Maps API with Places Autocomplete
+  var script = document.createElement('script');
+  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyBSbaDhzM3OwmL0xktghmljUDlvFPYhIls&libraries=places&callback=initAutocomplete";
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+  
+  // Set up trip type change handler
+  const tripTypeSelect = document.getElementById('trip-type');
+  if (tripTypeSelect) {
+    tripTypeSelect.addEventListener('change', toggleReturnDateFields);
+  }
+  
+  // Set up form submission handler
+  const form = document.getElementById('charter-quote-form');
+  if (form) {
+    form.addEventListener('submit', handleSubmit);
+  }
+});
+
+// Initialize Google Places Autocomplete
+function initAutocomplete() {
+  // Initialize autocomplete for pickup location
+  const pickupElement = document.getElementById('pickup-location');
+  if (pickupElement) {
+    new google.maps.places.Autocomplete(pickupElement, {
+      types: ['address']
+    });
+  }
+  
+  // Initialize autocomplete for dropoff location
+  const dropoffElement = document.getElementById('dropoff-location');
+  if (dropoffElement) {
+    new google.maps.places.Autocomplete(dropoffElement, {
+      types: ['address']
+    });
+  }
+}
+
+// Toggle return date fields based on trip type
+function toggleReturnDateFields() {
+  const tripType = document.getElementById('trip-type').value;
+  const returnDateContainer = document.getElementById('return-date-container');
+  
+  if (tripType === 'round-trip') {
+    returnDateContainer.style.display = 'block';
+    document.getElementById('return-date').required = true;
+    document.getElementById('return-time').required = true;
+  } else {
+    returnDateContainer.style.display = 'none';
+    document.getElementById('return-date').required = false;
+    document.getElementById('return-time').required = false;
+  }
+}
+
+// Handle form submission
+function handleSubmit(event) {
+  event.preventDefault();
+  
+  // Collect form data
+  const formData = {
+    tripType: document.getElementById('trip-type').value,
+    pickupLocation: document.getElementById('pickup-location').value,
+    dropoffLocation: document.getElementById('dropoff-location').value,
+    departureDate: document.getElementById('departure-date').value,
+    departureTime: document.getElementById('departure-time').value,
+    passengerCount: document.getElementById('passenger-count').value
+  };
+  
+  // If round-trip, add return date/time
+  if (formData.tripType === 'round-trip') {
+    formData.returnDate = document.getElementById('return-date').value;
+    formData.returnTime = document.getElementById('return-time').value;
+  }
+  
+  // In a real implementation, you would send this data to your API
+  console.log('Quote request data:', formData);
+  
+  // Create a success message
+  const quoteForm = document.getElementById('charter-quote-form');
+  const successMessage = document.createElement('div');
+  successMessage.className = 'results';
+  successMessage.innerHTML = `
+    <h3>Quote Request Submitted</h3>
+    <p>Thank you for your request. In a real implementation, this would generate a quote based on your trip details.</p>
+  `;
+  
+  // Hide the form, show the success message
+  quoteForm.style.display = 'none';
+  quoteForm.parentNode.appendChild(successMessage);
+}
+&lt;/script&gt;
+
+&lt;!-- END COPY --&gt;</code></pre>
+    </div>
+    
+    <h2>Installation Instructions:</h2>
+    <ol>
+      <li>In your WordPress dashboard, open the page you want to edit with Elementor</li>
+      <li>Add a new <strong>HTML</strong> widget to your page</li>
+      <li>Copy and paste the entire code from above into the HTML widget</li>
+      <li>Save and publish your page</li>
+    </ol>
+    
+    <p><strong>Note:</strong> The widget is using a Google Maps API key from this Replit. For a production site, replace it with your own API key.</p>
+  </div>
+  
+  <div class="widget-container">
+    <h2>Preview:</h2>
+    
+    <!-- Load our CSS -->
+    <link rel="stylesheet" href="/quote-widget.css">
+    
+    <!-- The widget -->
+    <div id="charter-quote-widget" class="charter-quote-widget">
+      <h2>Charter Bus Quote</h2>
+      
+      <form id="charter-quote-form">
+        <div class="form-group">
+          <label for="trip-type">Trip Type</label>
+          <select id="trip-type" name="tripType" required>
+            <option value="">Select Trip Type</option>
+            <option value="one-way">One Way</option>
+            <option value="round-trip">Round Trip</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="pickup-location">Pickup Location</label>
+          <input type="text" id="pickup-location" name="pickupLocation" placeholder="Enter pickup address" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="dropoff-location">Dropoff Location</label>
+          <input type="text" id="dropoff-location" name="dropoffLocation" placeholder="Enter dropoff address" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="departure-date">Departure Date</label>
+          <input type="date" id="departure-date" name="departureDate" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="departure-time">Departure Time</label>
+          <input type="time" id="departure-time" name="departureTime" required>
+        </div>
+        
+        <div id="return-date-container" style="display: none;">
+          <div class="form-group">
+            <label for="return-date">Return Date</label>
+            <input type="date" id="return-date" name="returnDate">
+          </div>
+          
+          <div class="form-group">
+            <label for="return-time">Return Time</label>
+            <input type="time" id="return-time" name="returnTime">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="passenger-count">Number of Passengers</label>
+          <input type="number" id="passenger-count" name="passengerCount" min="1" required>
+        </div>
+        
+        <button type="submit">Get Quote</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Load Google Maps API -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load Google Maps API with Places Autocomplete
+      var script = document.createElement('script');
+      script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyBSbaDhzM3OwmL0xktghmljUDlvFPYhIls&libraries=places&callback=initAutocomplete";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+      
+      // Set up trip type change handler
+      const tripTypeSelect = document.getElementById('trip-type');
+      if (tripTypeSelect) {
+        tripTypeSelect.addEventListener('change', toggleReturnDateFields);
+      }
+      
+      // Set up form submission handler
+      const form = document.getElementById('charter-quote-form');
+      if (form) {
+        form.addEventListener('submit', handleSubmit);
+      }
+    });
+    
+    // Initialize Google Places Autocomplete
+    function initAutocomplete() {
+      // Initialize autocomplete for pickup location
+      const pickupElement = document.getElementById('pickup-location');
+      if (pickupElement) {
+        new google.maps.places.Autocomplete(pickupElement, {
+          types: ['address']
+        });
+      }
+      
+      // Initialize autocomplete for dropoff location
+      const dropoffElement = document.getElementById('dropoff-location');
+      if (dropoffElement) {
+        new google.maps.places.Autocomplete(dropoffElement, {
+          types: ['address']
+        });
+      }
+    }
+    
+    // Toggle return date fields based on trip type
+    function toggleReturnDateFields() {
+      const tripType = document.getElementById('trip-type').value;
+      const returnDateContainer = document.getElementById('return-date-container');
+      
+      if (tripType === 'round-trip') {
+        returnDateContainer.style.display = 'block';
+        document.getElementById('return-date').required = true;
+        document.getElementById('return-time').required = true;
+      } else {
+        returnDateContainer.style.display = 'none';
+        document.getElementById('return-date').required = false;
+        document.getElementById('return-time').required = false;
+      }
+    }
+    
+    // Handle form submission
+    function handleSubmit(event) {
+      event.preventDefault();
+      
+      // Collect form data
+      const formData = {
+        tripType: document.getElementById('trip-type').value,
+        pickupLocation: document.getElementById('pickup-location').value,
+        dropoffLocation: document.getElementById('dropoff-location').value,
+        departureDate: document.getElementById('departure-date').value,
+        departureTime: document.getElementById('departure-time').value,
+        passengerCount: document.getElementById('passenger-count').value
+      };
+      
+      // If round-trip, add return date/time
+      if (formData.tripType === 'round-trip') {
+        formData.returnDate = document.getElementById('return-date').value;
+        formData.returnTime = document.getElementById('return-time').value;
+      }
+      
+      // In a real implementation, you would send this data to your API
+      console.log('Quote request data:', formData);
+      
+      // Create a success message
+      const quoteForm = document.getElementById('charter-quote-form');
+      const successMessage = document.createElement('div');
+      successMessage.className = 'results';
+      successMessage.innerHTML = `
+        <h3>Quote Request Submitted</h3>
+        <p>Thank you for your request. In a real implementation, this would generate a quote based on your trip details.</p>
+      `;
+      
+      // Hide the form, show the success message
+      quoteForm.style.display = 'none';
+      quoteForm.parentNode.appendChild(successMessage);
+    }
+  </script>
+</body>
+</html>

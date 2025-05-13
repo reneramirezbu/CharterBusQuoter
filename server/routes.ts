@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Route to serve the widget HTML
   app.get('/quote', (req, res) => {
-    res.sendFile(join(publicPath, 'quote-widget.html'));
+    res.sendFile(join(publicPath, 'quote'));
   });
   
   // Serve any static files from the public directory
@@ -81,6 +81,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/embed.js', (req, res) => {
     res.sendFile(join(publicPath, 'embed.js'));
+  });
+  
+  app.get('/elementor', (req, res) => {
+    res.sendFile(join(publicPath, 'elementor-embed.html'));
   });
   
   // Quote API routes
