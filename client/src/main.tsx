@@ -3,21 +3,21 @@ import App from "./App";
 import "./index.css";
 
 // Load Google Maps API script with better error handling and loading logic
-const loadMapsApi = () => {
+const loadMapsApi = (): Promise<void> | undefined => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     console.error("Google Maps API key is missing. Please add VITE_GOOGLE_MAPS_API_KEY to your environment variables.");
-    return;
+    return undefined;
   }
   
   // Check if API is already loaded
   if (window.google && window.google.maps) {
     console.log("Google Maps API already loaded");
-    return;
+    return Promise.resolve();
   }
   
   // Create a promise to track loading status
-  const mapsPromise = new Promise<void>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     // Add a callback for when the API loads
     window.initGoogleMapsCallback = () => {
       console.log("Google Maps API loaded successfully");
@@ -45,8 +45,6 @@ const loadMapsApi = () => {
       }
     }, 10000); // 10 seconds timeout
   });
-  
-  return mapsPromise;
 };
 
 // Define the callback property on the window object
@@ -57,10 +55,16 @@ declare global {
 }
 
 // Load the Maps API
-loadMapsApi()
-  .catch(error => {
-    console.warn("Google Maps failed to load:", error);
-  });
+try {
+  const mapsPromise = loadMapsApi();
+  if (mapsPromise) {
+    mapsPromise.catch(error => {
+      console.warn("Google Maps failed to load:", error);
+    });
+  }
+} catch (error) {
+  console.error("Error initializing Google Maps:", error);
+}
 
 // Render the app regardless of Maps API status (component will handle fallbacks)
 createRoot(document.getElementById("root")!).render(<App />);
