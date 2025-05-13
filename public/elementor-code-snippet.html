@@ -95,28 +95,11 @@ INSTRUCTIONS:
     <div id="step-bus-options" class="form-step">
       <!-- Hidden input with Standard Bus as the only option -->
       <input type="hidden" id="bus-standard" name="busType" value="standard">
-
-      <h3>Additional Amenities</h3>
-      <div class="amenities-options">
-        <div class="amenity-option">
-          <input type="checkbox" id="amenity-wifi" name="amenities" value="wifi">
-          <label for="amenity-wifi">WiFi</label>
-        </div>
-
-        <div class="amenity-option">
-          <input type="checkbox" id="amenity-lavatory" name="amenities" value="lavatory">
-          <label for="amenity-lavatory">Lavatory</label>
-        </div>
-
-        <div class="amenity-option">
-          <input type="checkbox" id="amenity-entertainment" name="amenities" value="entertainment">
-          <label for="amenity-entertainment">Entertainment</label>
-        </div>
-
-        <div class="amenity-option">
-          <input type="checkbox" id="amenity-power" name="amenities" value="power">
-          <label for="amenity-power">Power Outlets</label>
-        </div>
+      
+      <!-- Standard Charter Bus Card (Non-interactive) -->
+      <div class="standard-bus-card">
+        <h3>Standard Charter Bus</h3>
+        <p>Comfortable seating for up to 56 passengers with essential amenities</p>
       </div>
 
       <div class="form-actions">
@@ -324,73 +307,24 @@ INSTRUCTIONS:
 }
 
 /* Bus Options Styles */
-.bus-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+.standard-bus-card {
+  padding: 20px;
   margin-bottom: 25px;
-}
-
-.bus-option {
-  flex: 1 1 calc(50% - 15px);
-  min-width: 200px;
-}
-
-.bus-option input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-}
-
-.bus-option label {
-  display: block;
-  padding: 15px;
-  border: 1px solid #ddd;
+  border: 1px solid #dddddd;
   border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: #f9f9f9;
+  background-color: #f8f9fa;
 }
 
-.bus-option input[type="radio"]:checked + label {
-  border-color: #ffde00;
-  background-color: #fff;
-  box-shadow: 0 0 0 3px #ffde00;
-}
-
-.bus-option h4 {
-  margin: 0 0 5px 0;
+.standard-bus-card h3 {
+  margin: 0 0 10px 0;
   color: #333;
+  font-size: 18px;
 }
 
-.bus-option p {
+.standard-bus-card p {
   margin: 0;
   color: #666;
   font-size: 14px;
-}
-
-/* Amenities Styles */
-.amenities-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 25px;
-  padding: 15px;
-  border: 3px solid #ffde00;
-  border-radius: 4px;
-  background-color: #fff;
-}
-
-.amenity-option {
-  flex: 1 1 calc(25% - 15px);
-  min-width: 120px;
-  display: flex;
-  align-items: center;
-}
-
-.amenity-option input[type="checkbox"] {
-  margin-right: 8px;
-  height: 16px;
-  width: 16px;
 }
 
 /* Button Styles */
@@ -790,8 +724,8 @@ function getQuote() {
     returnDate: document.getElementById('trip-type').value === 'round-trip' ? document.getElementById('return-date').value : null,
     returnTime: document.getElementById('trip-type').value === 'round-trip' ? document.getElementById('return-time').value : null,
     passengerCount: parseInt(document.getElementById('passenger-count').value),
-    busType: document.querySelector('input[name="busType"]').value,
-    amenities: Array.from(document.querySelectorAll('input[name="amenities"]:checked')).map(el => el.value)
+    busType: 'standard',
+    amenities: []
   };
   
   // Simulate API call with timeout
@@ -815,56 +749,30 @@ function getQuote() {
 
 // Generate a mock quote (for demo purposes)
 function generateMockQuote(formData) {
-  // Base rates
-  const basePrices = {
-    standard: 800,
-    luxury: 1200
-  };
+  // Fixed rate for standard bus
+  const basePrice = 800;
   
   // Calculate distance factor (mock)
   const distanceFactor = 1.5; // In a real implementation, calculate based on locations
   
-  // Calculate base price
-  let basePrice = basePrices[formData.busType] * distanceFactor;
+  // Calculate final base price
+  let finalBasePrice = basePrice * distanceFactor;
   
   // Adjust for round trip
   if (formData.tripType === 'round-trip') {
-    basePrice *= 1.8; // 20% discount for round trip
+    finalBasePrice *= 1.8; // 20% discount for round trip
   }
   
-  // Calculate amenities cost
-  const amenitiesPrices = {
-    wifi: 50,
-    lavatory: 75,
-    entertainment: 100,
-    power: 25
-  };
-  
-  let amenitiesTotal = 0;
-  formData.amenities.forEach(amenity => {
-    amenitiesTotal += amenitiesPrices[amenity] || 0;
-  });
-  
-  // Generate breakdown items
+  // Generate breakdown items - only standard bus
   const breakdown = [
     {
-      description: `${formData.busType.charAt(0).toUpperCase() + formData.busType.slice(1)} Charter Bus`,
-      amount: basePrice.toFixed(2)
+      description: 'Standard Charter Bus',
+      amount: finalBasePrice.toFixed(2)
     }
   ];
   
-  // Add amenities to breakdown
-  if (formData.amenities.length > 0) {
-    formData.amenities.forEach(amenity => {
-      breakdown.push({
-        description: `${amenity.charAt(0).toUpperCase() + amenity.slice(1)} add-on`,
-        amount: amenitiesPrices[amenity].toFixed(2)
-      });
-    });
-  }
-  
-  // Calculate subtotal
-  const subtotal = basePrice + amenitiesTotal;
+  // Calculate subtotal - now just the base price
+  const subtotal = finalBasePrice;
   
   // Service fee (10%)
   const serviceFee = subtotal * 0.1;
