@@ -12,8 +12,8 @@
       padding: 20px;
     }
   </style>
-  <!-- Add the CSS stylesheet link -->
-  <link rel="stylesheet" href="/quote-widget.css">
+  <!-- Add the CSS stylesheet link with cache buster -->
+  <link rel="stylesheet" href="/quote-widget.css?v=1.0.1">
   <!-- Load widget JavaScript first -->
   <script src="/quote-widget.js"></script>
   <!-- Load Google Maps API with Places library -->

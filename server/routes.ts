@@ -1,4 +1,4 @@
-import { type Express, NextFunction, Request, Response } from "express";
+import { type Express, NextFunction, Request, Response, static as expressStatic } from "express";
 import { createServer, type Server } from "http";
 import cors from "cors";
 import { fileURLToPath } from 'url';
@@ -62,24 +62,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(join(publicPath, 'quote'));
   });
   
-  // Serve any static files from the public directory
+  // Configure static files with cache-control settings
+  app.use('/static', expressStatic(publicPath, {
+    maxAge: 0, // Disable caching during development
+    etag: false, // Disable etag
+    lastModified: false // Disable last-modified
+  }));
+  
+  // Serve any static files from the public directory with no-cache headers
   app.get('/quote-widget.js', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(join(publicPath, 'quote-widget.js'));
   });
   
   app.get('/quote-widget.css', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(join(publicPath, 'quote-widget.css'));
   });
   
   app.get('/widget-styles.css', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(join(publicPath, 'widget-styles.css'));
   });
   
   app.get('/quote-widget-init.js', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(join(publicPath, 'quote-widget-init.js'));
   });
   
   app.get('/embed.js', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(join(publicPath, 'embed.js'));
   });
   
