@@ -87,30 +87,14 @@ INSTRUCTIONS:
       </div>
 
       <div class="form-actions">
-        <button type="button" id="next-to-bus-options" class="btn-primary">Next: Bus Options</button>
+        <button type="button" id="next-to-bus-options" class="btn-primary">Next</button>
       </div>
     </div>
 
     <!-- Step 2: Bus Options -->
     <div id="step-bus-options" class="form-step">
-      <h3>Select Bus Type</h3>
-      <div class="bus-options">
-        <div class="bus-option">
-          <input type="radio" id="bus-standard" name="busType" value="standard" checked required>
-          <label for="bus-standard">
-            <h4>Standard Charter Bus</h4>
-            <p>Comfortable seating for up to 56 passengers with essential amenities</p>
-          </label>
-        </div>
-
-        <div class="bus-option">
-          <input type="radio" id="bus-luxury" name="busType" value="luxury">
-          <label for="bus-luxury">
-            <h4>Luxury Charter Bus</h4>
-            <p>Premium experience with spacious seating and enhanced amenities</p>
-          </label>
-        </div>
-      </div>
+      <!-- Hidden input with Standard Bus as the only option -->
+      <input type="hidden" id="bus-standard" name="busType" value="standard">
 
       <h3>Additional Amenities</h3>
       <div class="amenities-options">
@@ -606,7 +590,7 @@ function setupFormNavigation() {
   // Setup default dates
   setupDefaultDates();
   
-  // Step 1 to Step 2 navigation
+  // Step 1 to Step 2 (Amenities) navigation
   const nextToBusOptionsBtn = document.getElementById('next-to-bus-options');
   if (nextToBusOptionsBtn) {
     nextToBusOptionsBtn.addEventListener('click', function() {
@@ -759,24 +743,11 @@ function validateTripDetails() {
   return isValid;
 }
 
-// Validate bus options
+// Validate amenities (optional selection)
 function validateBusOptions() {
-  let isValid = true;
-  const busTypeRadios = document.querySelectorAll('input[name="busType"]');
-  let busTypeSelected = false;
-  
-  busTypeRadios.forEach(radio => {
-    if (radio.checked) {
-      busTypeSelected = true;
-    }
-  });
-  
-  if (!busTypeSelected) {
-    alert('Please select a bus type');
-    isValid = false;
-  }
-  
-  return isValid;
+  // Always return true since bus type is pre-selected
+  // and amenities are optional
+  return true;
 }
 
 // Setup form validation
@@ -819,7 +790,7 @@ function getQuote() {
     returnDate: document.getElementById('trip-type').value === 'round-trip' ? document.getElementById('return-date').value : null,
     returnTime: document.getElementById('trip-type').value === 'round-trip' ? document.getElementById('return-time').value : null,
     passengerCount: parseInt(document.getElementById('passenger-count').value),
-    busType: document.querySelector('input[name="busType"]:checked').value,
+    busType: document.querySelector('input[name="busType"]').value,
     amenities: Array.from(document.querySelectorAll('input[name="amenities"]:checked')).map(el => el.value)
   };
   
