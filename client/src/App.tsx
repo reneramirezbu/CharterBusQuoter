@@ -1,29 +1,16 @@
-import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
-import StandaloneQuote from "@/pages/StandaloneQuote";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/quote" component={StandaloneQuote} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
+// Simplified App component - just render the quote form directly with no routing
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <Toaster />
+      <div className="container mx-auto p-4">
+        <Home />
+      </div>
     </QueryClientProvider>
   );
 }

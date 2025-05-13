@@ -1,112 +1,185 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: 210 33% 99%;
-  --foreground: 222 47% 11%;
-  --muted: 220 14.3% 95.9%;
-  --muted-foreground: 220 8.9% 46.1%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 220 14.3% 4.1%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 14.3% 4.1%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --primary: 210 79% 46%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 120 43% 46%;
-  --secondary-foreground: 120 40% 97.8%;
-  --accent: 210 79% 96%;
-  --accent-foreground: 210 79% 46%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --ring: 210 79% 46%;
-  --radius: 0.5rem;
-  
-  /* Chart colors */
-  --chart-1: 210 79% 46%;
-  --chart-2: 120 43% 46%;
-  --chart-3: 40 96% 65%;
-  --chart-4: 262 83% 58%;
-  --chart-5: 0 84.2% 60.2%;
-  
-  /* Sidebar colors (not used in this app but required for the theme structure) */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 220 14.3% 4.1%;
-  --sidebar-primary: 210 79% 46%;
-  --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 210 79% 96%;
-  --sidebar-accent-foreground: 210 79% 46%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 210 79% 46%;
+/* Reset styles for the widget */
+#charter-quote-container * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --muted: 217 33% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
-  --card: 222 47% 11%;
-  --card-foreground: 210 40% 98%;
-  --border: 217 33% 17.5%;
-  --input: 217 33% 17.5%;
-  --primary: 210 79% 46%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 120 43% 46%;
-  --secondary-foreground: 120 40% 97.8%;
-  --accent: 217 33% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --ring: 212.7 26.8% 83.9%;
+body {
+  background-color: #f5f7fb;
+  color: #333;
+  line-height: 1.5;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply font-sans bg-[#F5F7FB] text-gray-800;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
-  }
+/* Quote widget container */
+.charter-quote-widget {
+  max-width: 100%;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 
-@layer components {
-  .step-active {
-    @apply text-primary border-primary bg-accent;
-  }
-  
-  .form-section:not(.active) {
-    @apply hidden;
-  }
-  
-  .shadow-card {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  }
-  
-  .location-preview {
-    @apply bg-gray-100 rounded-md p-2 mt-1 text-sm;
-  }
-  
-  .checkbox-item input:checked + div {
-    @apply border-primary bg-accent;
-  }
-  
-  .checkbox-item input:checked + div .checkmark {
-    @apply flex;
-  }
-  
-  .quote-breakdown-item:not(:last-child) {
-    @apply border-b border-gray-200;
+/* Form elements */
+.charter-quote-form {
+  padding: 1.5rem;
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #e2e8f0;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.progress-step {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #a0aec0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-step.active {
+  background-color: #3182ce;
+  color: white;
+}
+
+.progress-step.completed {
+  background-color: #48bb78;
+  color: white;
+}
+
+/* Form steps */
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+}
+
+/* Form rows and groups */
+.form-row {
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+}
+
+.error-message {
+  color: #e53e3e;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: none;
+}
+
+/* Location inputs */
+.location-preview {
+  background-color: #f7fafc;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  display: none;
+}
+
+.location-preview.active {
+  display: block;
+}
+
+/* Trip type options */
+.trip-type-options {
+  display: flex;
+  gap: 1rem;
+}
+
+.trip-option {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.trip-option.selected {
+  border-color: #3182ce;
+  background-color: #ebf8ff;
+}
+
+/* Quote results */
+.quote-breakdown-item:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Utility classes */
+.shadow-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-2 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
   }
 }
