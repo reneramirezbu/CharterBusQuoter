@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Charter Bus Quote Widget</title>
   <link rel="stylesheet" href="/quote-widget.css">
-  <!-- Widget initialization will load Google Maps API -->
-  <script src="/quote-widget-init.js"></script>
+  <!-- Load Google Maps API directly -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0m0Q6TRqwUx50-GTqKfHAjBOCjbRa7AY&libraries=places"></script>
   <style>
     /* Additional styling for widget components */
     .form-step {
@@ -432,7 +432,7 @@
   </style>
 </head>
 <body>
-  <div id="charter-quote-widget" class="charter-quote-widget" data-api-key="$VITE_GOOGLE_MAPS_API_KEY">
+  <div id="charter-quote-widget" class="charter-quote-widget">
     <h2>Charter Bus Quote</h2>
     <div class="loading-overlay">
       <div class="spinner"></div>
