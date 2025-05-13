@@ -62,16 +62,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(join(publicPath, 'quote-widget.html'));
   });
   
-  // Route to serve the simplified widget HTML for Elementor
-  app.get('/simple-quote', (req, res) => {
-    res.sendFile(join(publicPath, 'simple-quote-widget.html'));
-  });
-  
-  // Route to serve the elementor embedding version
-  app.get('/elementor-embed', (req, res) => {
-    res.sendFile(join(publicPath, 'elementor-embed.html'));
-  });
-  
   // Serve any static files from the public directory
   app.get('/quote-widget.js', (req, res) => {
     res.sendFile(join(publicPath, 'quote-widget.js'));
