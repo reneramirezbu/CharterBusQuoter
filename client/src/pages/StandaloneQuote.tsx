@@ -1,6 +1,6 @@
 import React from "react";
-import CharterBusQuoteWidget from "@/components/CharterBusQuoteWidget";
 import { useEffect } from "react";
+import SimpleCharterQuoteWidget from "@/components/SimpleCharterQuoteWidget";
 
 /**
  * Standalone Quote Page
@@ -26,7 +26,7 @@ const StandaloneQuote: React.FC = () => {
   return (
     <div className="standalone-quote-page bg-white min-h-screen py-8 px-4">
       <div id="charter-quote-widget" className="charter-quote-widget">
-        <CharterBusQuoteWidget />
+        <SimpleCharterQuoteWidget />
       </div>
     </div>
   );
