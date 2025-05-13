@@ -18,7 +18,6 @@ import LocationInput from "./LocationInput";
  * A standalone widget that can be embedded in any website (including Elementor)
  * to provide charter bus quote functionality.
  */
-export
 const CharterBusQuoteWidget: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -40,18 +39,9 @@ const CharterBusQuoteWidget: React.FC = () => {
       formattedAddress: "",
       addressInput: ""
     },
-    busType: "standard", // Always standard bus
-    amenities: [] // No amenities
+    busType: "standard",
+    amenities: []
   });
-  
-  // Ensure busType is always "standard" and amenities is empty
-  React.useEffect(() => {
-    setFormData(prev => ({ 
-      ...prev, 
-      busType: "standard", 
-      amenities: [] 
-    }));
-  }, []);
   
   // Create a mutation for submitting the quote request
   const { mutate, data: quoteData, isPending } = useMutation<QuoteResponse>({
@@ -143,7 +133,21 @@ const CharterBusQuoteWidget: React.FC = () => {
     setFormData(prev => ({ ...prev, dropoffLocation: location }));
   };
   
-  // Bus type is always standard and there are no amenities - removed handlers
+  const handleBusTypeChange = (busType: "standard" | "luxury") => {
+    setFormData(prev => ({ ...prev, busType }));
+  };
+  
+  const handleAmenityChange = (amenity: string, checked: boolean) => {
+    setFormData(prev => {
+      const currentAmenities = prev.amenities || [];
+      
+      if (checked) {
+        return { ...prev, amenities: [...currentAmenities, amenity] };
+      } else {
+        return { ...prev, amenities: currentAmenities.filter(a => a !== amenity) };
+      }
+    });
+  };
   
   const handleSpecialRequirementsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, specialRequirements: e.target.value }));
@@ -154,11 +158,12 @@ const CharterBusQuoteWidget: React.FC = () => {
   const minDate = today.toISOString().split('T')[0];
 
   return (
-    <>
-      <h2>Charter Bus Quote</h2>
-      <p>Complete the form below to get an instant quote for your charter bus trip.</p>
+    <div className="charter-bus-quote-widget bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
+      <div className="widget-header mb-6">
+        <h2 className="font-heading font-bold text-xl sm:text-2xl text-gray-800 mb-2">Charter Bus Quote</h2>
+        <p className="text-gray-600 text-sm">Complete the form below to get an instant quote for your charter bus trip.</p>
+      </div>
       
-      <form className="charter-quote-form">
       {/* Step Indicator */}
       <div className="flex justify-between items-center mb-6">
         {['Trip Details', 'Bus Options', 'Quote Summary'].map((label, index) => (
@@ -347,18 +352,67 @@ const CharterBusQuoteWidget: React.FC = () => {
         {/* Step 2: Bus Options */}
         {currentStep === 2 && (
           <div className="step-content">
-            {/* Standard Bus Card - Display Only */}
-            <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <h4 className="font-medium text-lg mb-2">Standard Charter Bus</h4>
-              <p className="text-gray-700">Comfortable seating for up to 56 passengers with essential amenities.</p>
-              
-              {/* Hidden input to always set standard bus type */}
-              <input 
-                type="hidden" 
-                name="busType" 
-                value="standard" 
-                onChange={() => { /* No-op */ }}
-              />
+            <div className="mb-6">
+              <Label className="block text-sm font-medium text-gray-700 mb-3">Select Bus Type</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Standard Bus Option */}
+                <CheckboxItem
+                  type="radio"
+                  name="busType"
+                  label="Standard Charter Bus"
+                  description="Comfortable seating for up to 56 passengers with essential amenities."
+                  checked={formData.busType === "standard"}
+                  onChange={() => handleBusTypeChange("standard")}
+                />
+
+                {/* Luxury Bus Option */}
+                <CheckboxItem
+                  type="radio"
+                  name="busType"
+                  label="Luxury Charter Bus"
+                  description="Premium experience with spacious seating and enhanced amenities."
+                  checked={formData.busType === "luxury"}
+                  onChange={() => handleBusTypeChange("luxury")}
+                />
+              </div>
+            </div>
+
+            {/* Additional Amenities */}
+            <div className="mb-6">
+              <Label className="block text-sm font-medium text-gray-700 mb-3">Additional Amenities</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <CheckboxItem
+                  name="amenities"
+                  label="WiFi"
+                  icon="ri-wifi-line"
+                  checked={formData.amenities?.includes("wifi")}
+                  onChange={(e) => handleAmenityChange("wifi", e.target.checked)}
+                />
+                
+                <CheckboxItem
+                  name="amenities"
+                  label="Lavatory"
+                  icon="ri-home-gear-line"
+                  checked={formData.amenities?.includes("lavatory")}
+                  onChange={(e) => handleAmenityChange("lavatory", e.target.checked)}
+                />
+                
+                <CheckboxItem
+                  name="amenities"
+                  label="Entertainment"
+                  icon="ri-tv-line"
+                  checked={formData.amenities?.includes("entertainment")}
+                  onChange={(e) => handleAmenityChange("entertainment", e.target.checked)}
+                />
+                
+                <CheckboxItem
+                  name="amenities"
+                  label="Power Outlets"
+                  icon="ri-plug-line"
+                  checked={formData.amenities?.includes("powerOutlets")}
+                  onChange={(e) => handleAmenityChange("powerOutlets", e.target.checked)}
+                />
+              </div>
             </div>
 
             {/* Navigation Buttons */}

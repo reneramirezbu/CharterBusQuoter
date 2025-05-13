@@ -63,31 +63,9 @@ npm run dev
 
 The widget styles can be customized to match your brand. The main CSS files are:
 
-- `public/quote-widget.css`: Main widget styles (contains the specific styling you requested)
+- `public/quote-widget.css`: Main widget styles
+- `public/widget-styles.css`: Additional styles for embedding
 
-## WordPress/Elementor Integration
+## WordPress CSS Wrapping
 
-The widget is now properly scoped with the `.charter-quote-widget` class to minimize CSS conflicts with WordPress and Elementor. All styles are encapsulated within this class to ensure they only apply to the widget.
-
-### Simplified Files for Copy/Paste
-
-For easy integration into Elementor, use these simplified files:
-
-- `public/elementor-embed-simple.html`: Minimal HTML with just the form and wrapper
-- `public/quote-widget.css`: The exact CSS you specified
-- `public/elementor-widget.js`: JavaScript for the form functionality
-
-### Container Structure
-
-The widget is now wrapped in a container with:
-
-```html
-<div id="charter-quote-widget" class="charter-quote-widget">
-  <!-- form content here -->
-</div>
-```
-
-This structure ensures that:
-1. The widget is properly isolated from other page elements
-2. The CSS selectors only target elements within the widget
-3. JavaScript functions can easily find the widget container
+When integrating with WordPress, you may need to adjust the CSS selectors to account for WordPress's own CSS. The widget is designed to be encapsulated within the `.charter-quote-widget` class to minimize conflicts.
