@@ -52,14 +52,17 @@
 
   // Function to initialize the Places Autocomplete
   function initPlacesAutocomplete() {
-    const pickupInput = document.getElementById('pickup-location');
-    const dropoffInput = document.getElementById('dropoff-location');
+    const pickupInput = document.getElementById('pickupLocation');
+    const dropoffInput = document.getElementById('dropoffLocation');
     
     if (pickupInput && window.google && window.google.maps && window.google.maps.places) {
       new google.maps.places.Autocomplete(pickupInput, {
         types: ['address'],
         fields: ['place_id', 'formatted_address', 'geometry']
       });
+      console.log('Pickup autocomplete initialized');
+    } else {
+      console.error('Could not initialize pickup autocomplete. Input or Google Maps not available');
     }
     
     if (dropoffInput && window.google && window.google.maps && window.google.maps.places) {
@@ -67,6 +70,9 @@
         types: ['address'],
         fields: ['place_id', 'formatted_address', 'geometry']
       });
+      console.log('Dropoff autocomplete initialized');
+    } else {
+      console.error('Could not initialize dropoff autocomplete. Input or Google Maps not available');
     }
   }
 
