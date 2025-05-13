@@ -1,4 +1,4 @@
-import { type Express, NextFunction, Request, Response, static as expressStatic } from "express";
+import express, { type Express, NextFunction, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import cors from "cors";
 import { fileURLToPath } from 'url';
@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Configure static files with cache-control settings
-  app.use('/static', expressStatic(publicPath, {
+  app.use('/static', express.static(publicPath, {
     maxAge: 0, // Disable caching during development
     etag: false, // Disable etag
     lastModified: false // Disable last-modified
@@ -106,6 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.get('/elementor', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(join(publicPath, 'elementor-embed.html'));
   });
   
