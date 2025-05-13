@@ -18,6 +18,7 @@ import LocationInput from "./LocationInput";
  * A standalone widget that can be embedded in any website (including Elementor)
  * to provide charter bus quote functionality.
  */
+export
 const CharterBusQuoteWidget: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -153,12 +154,11 @@ const CharterBusQuoteWidget: React.FC = () => {
   const minDate = today.toISOString().split('T')[0];
 
   return (
-    <div className="charter-bus-quote-widget bg-white rounded-lg shadow-md p-6 max-w-4xl mx-auto">
-      <div className="widget-header mb-6">
-        <h2 className="font-heading font-bold text-xl sm:text-2xl text-gray-800 mb-2">Charter Bus Quote</h2>
-        <p className="text-gray-600 text-sm">Complete the form below to get an instant quote for your charter bus trip.</p>
-      </div>
+    <>
+      <h2>Charter Bus Quote</h2>
+      <p>Complete the form below to get an instant quote for your charter bus trip.</p>
       
+      <form className="charter-quote-form">
       {/* Step Indicator */}
       <div className="flex justify-between items-center mb-6">
         {['Trip Details', 'Bus Options', 'Quote Summary'].map((label, index) => (
