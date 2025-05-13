@@ -17,9 +17,9 @@ INSTRUCTIONS:
   <form id="charter-quote-form" class="charter-quote-form">
     <!-- Progress Steps -->
     <div class="progress-bar">
-      <div class="step active">1. Trip Details</div>
-      <div class="step">2. Bus Options</div>
-      <div class="step">3. Summary</div>
+      <div class="step active">1</div>
+      <div class="step">2</div>
+      <div class="step">3</div>
     </div>
 
     <!-- Step 1: Trip Details -->
@@ -93,42 +93,21 @@ INSTRUCTIONS:
 
     <!-- Step 2: Bus Options -->
     <div id="step-bus-options" class="form-step">
-      <h3>Select Your Bus Type</h3>
+      <h3>Select Bus Type</h3>
       <div class="bus-options">
         <div class="bus-option">
-          <input type="radio" id="bus-standard" name="busType" value="standard" required>
+          <input type="radio" id="bus-standard" name="busType" value="standard" checked required>
           <label for="bus-standard">
             <h4>Standard Charter Bus</h4>
-            <p>56 seats | Best for large groups</p>
-            <div class="bus-features">
-              <span>✓ WiFi</span>
-              <span>✓ Restroom</span>
-              <span>✓ Reclining Seats</span>
-            </div>
+            <p>Comfortable seating for up to 56 passengers with essential amenities</p>
           </label>
         </div>
 
         <div class="bus-option">
-          <input type="radio" id="bus-minibus" name="busType" value="minibus">
-          <label for="bus-minibus">
-            <h4>Minibus</h4>
-            <p>30 seats | Best for medium groups</p>
-            <div class="bus-features">
-              <span>✓ WiFi</span>
-              <span>✓ TV Screens</span>
-            </div>
-          </label>
-        </div>
-
-        <div class="bus-option">
-          <input type="radio" id="bus-sprinter" name="busType" value="sprinter">
-          <label for="bus-sprinter">
-            <h4>Sprinter Van</h4>
-            <p>15 seats | Best for small groups</p>
-            <div class="bus-features">
-              <span>✓ WiFi</span>
-              <span>✓ Luxury Interior</span>
-            </div>
+          <input type="radio" id="bus-luxury" name="busType" value="luxury">
+          <label for="bus-luxury">
+            <h4>Luxury Charter Bus</h4>
+            <p>Premium experience with spacious seating and enhanced amenities</p>
           </label>
         </div>
       </div>
@@ -137,22 +116,22 @@ INSTRUCTIONS:
       <div class="amenities-options">
         <div class="amenity-option">
           <input type="checkbox" id="amenity-wifi" name="amenities" value="wifi">
-          <label for="amenity-wifi">WiFi ($50)</label>
+          <label for="amenity-wifi">WiFi</label>
         </div>
 
         <div class="amenity-option">
-          <input type="checkbox" id="amenity-bathroom" name="amenities" value="bathroom">
-          <label for="amenity-bathroom">Bathroom ($75)</label>
+          <input type="checkbox" id="amenity-lavatory" name="amenities" value="lavatory">
+          <label for="amenity-lavatory">Lavatory</label>
         </div>
 
         <div class="amenity-option">
-          <input type="checkbox" id="amenity-tv" name="amenities" value="tv">
-          <label for="amenity-tv">TV/DVD ($100)</label>
+          <input type="checkbox" id="amenity-entertainment" name="amenities" value="entertainment">
+          <label for="amenity-entertainment">Entertainment</label>
         </div>
 
         <div class="amenity-option">
-          <input type="checkbox" id="amenity-outlets" name="amenities" value="power-outlets">
-          <label for="amenity-outlets">Power Outlets ($25)</label>
+          <input type="checkbox" id="amenity-power" name="amenities" value="power">
+          <label for="amenity-power">Power Outlets</label>
         </div>
       </div>
 
@@ -326,33 +305,38 @@ INSTRUCTIONS:
 .progress-bar::before {
   content: '';
   position: absolute;
-  top: 14px;
+  top: 17px;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 1px;
   background: #e0e0e0;
   z-index: 1;
 }
 
 .progress-bar .step {
-  background: #fff;
-  padding: 5px 15px;
-  border-radius: 20px;
-  border: 2px solid #e0e0e0;
-  color: #777;
+  background: #f9f9f9;
+  width: 35px;
+  height: 35px;
+  line-height: 35px;
+  text-align: center;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  color: #999;
   font-weight: 500;
   position: relative;
   z-index: 2;
 }
 
 .progress-bar .step.active {
-  border-color: #3498db;
-  color: #3498db;
+  background-color: #2196f3;
+  border-color: #2196f3;
+  color: white;
 }
 
 .progress-bar .step.completed {
-  border-color: #2ecc71;
-  color: #2ecc71;
+  background-color: #4caf50;
+  border-color: #4caf50;
+  color: white;
 }
 
 /* Bus Options Styles */
@@ -364,26 +348,29 @@ INSTRUCTIONS:
 }
 
 .bus-option {
-  flex: 1 1 calc(33.333% - 15px);
+  flex: 1 1 calc(50% - 15px);
   min-width: 200px;
 }
 
 .bus-option input[type="radio"] {
-  display: none;
+  position: absolute;
+  opacity: 0;
 }
 
 .bus-option label {
   display: block;
   padding: 15px;
-  border: 2px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s ease;
+  background-color: #f9f9f9;
 }
 
 .bus-option input[type="radio"]:checked + label {
-  border-color: #3498db;
-  background-color: rgba(52, 152, 219, 0.05);
+  border-color: #ffde00;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px #ffde00;
 }
 
 .bus-option h4 {
@@ -392,40 +379,34 @@ INSTRUCTIONS:
 }
 
 .bus-option p {
-  margin: 0 0 10px 0;
+  margin: 0;
   color: #666;
   font-size: 14px;
-}
-
-.bus-features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.bus-features span {
-  background: #f8f9fa;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #555;
 }
 
 /* Amenities Styles */
 .amenities-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 20px;
   margin-bottom: 25px;
+  padding: 15px;
+  border: 3px solid #ffde00;
+  border-radius: 4px;
+  background-color: #fff;
 }
 
 .amenity-option {
   flex: 1 1 calc(25% - 15px);
-  min-width: 150px;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
 }
 
 .amenity-option input[type="checkbox"] {
   margin-right: 8px;
+  height: 16px;
+  width: 16px;
 }
 
 /* Button Styles */
@@ -443,15 +424,16 @@ INSTRUCTIONS:
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 120px;
 }
 
 .btn-primary {
-  background-color: #3498db;
+  background-color: #0073e6;
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #2980b9;
+  background-color: #005bb9;
 }
 
 .btn-secondary {
@@ -865,8 +847,7 @@ function generateMockQuote(formData) {
   // Base rates
   const basePrices = {
     standard: 800,
-    minibus: 500,
-    sprinter: 300
+    luxury: 1200
   };
   
   // Calculate distance factor (mock)
@@ -883,9 +864,9 @@ function generateMockQuote(formData) {
   // Calculate amenities cost
   const amenitiesPrices = {
     wifi: 50,
-    bathroom: 75,
-    tv: 100,
-    'power-outlets': 25
+    lavatory: 75,
+    entertainment: 100,
+    power: 25
   };
   
   let amenitiesTotal = 0;
@@ -1015,10 +996,8 @@ function formatBusType(busType) {
   switch (busType) {
     case 'standard':
       return 'Standard Charter Bus (56 seats)';
-    case 'minibus':
-      return 'Minibus (30 seats)';
-    case 'sprinter':
-      return 'Sprinter Van (15 seats)';
+    case 'luxury':
+      return 'Luxury Charter Bus (56 seats)';
     default:
       return busType;
   }
