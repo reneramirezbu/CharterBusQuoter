@@ -26,11 +26,34 @@ const LocationInput: React.FC<LocationInputProps> = ({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [formattedAddress, setFormattedAddress] = useState<string>("");
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [apiLoaded, setApiLoaded] = useState<boolean>(false);
 
+  // Check for Google Maps API loading status
   useEffect(() => {
-    if (!inputRef.current || !window.google || !window.google.maps || !window.google.maps.places) {
-      return;
-    }
+    const checkGoogleMapsLoaded = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        setApiLoaded(true);
+        return true;
+      }
+      return false;
+    };
+
+    // If already loaded
+    if (checkGoogleMapsLoaded()) return;
+
+    // Poll for API loading
+    const interval = setInterval(() => {
+      if (checkGoogleMapsLoaded()) {
+        clearInterval(interval);
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Initialize autocomplete once API is loaded and input is available
+  useEffect(() => {
+    if (!apiLoaded || !inputRef.current) return;
 
     // Initialize Google Places Autocomplete
     autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
@@ -63,7 +86,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, [onChange]);
+  }, [apiLoaded, onChange]);
 
   return (
     <div className="mb-4">
@@ -76,7 +99,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
           id={id}
           ref={inputRef}
           type="text"
-          placeholder={placeholder}
+          placeholder={apiLoaded ? placeholder : "Loading location service..."}
           className={`pl-10 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
           value={value}
           onChange={(e) => {
@@ -91,8 +114,16 @@ const LocationInput: React.FC<LocationInputProps> = ({
             }
           }}
           required={required}
+          disabled={!apiLoaded}
         />
       </div>
+      
+      {!apiLoaded && (
+        <p className="mt-1 text-xs text-amber-500">
+          <i className="ri-loader-2-line animate-spin inline-block mr-1"></i>
+          Loading Google Maps service...
+        </p>
+      )}
       
       {error && (
         <p className="mt-1 text-xs text-red-500">{error}</p>

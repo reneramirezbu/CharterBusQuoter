@@ -5,22 +5,32 @@ import {
 } from '@shared/schema';
 import { v4 as uuidv4 } from 'uuid';
 
-// This service is responsible for calculating quote prices
+/**
+ * Calculate a quote based on trip details
+ * 
+ * This service is responsible for calculating accurate price quotes based on 
+ * trip details including passenger count, bus type, trip type, and selected amenities.
+ * 
+ * @param tripDetails The details of the trip from the quote request
+ * @returns A complete quote response with breakdown, subtotal, service fee, and total
+ */
 export function calculateQuote(tripDetails: QuoteRequest): QuoteResponse {
   const {
     numPassengers,
     busType,
     amenities = [],
-    tripType
+    tripType,
+    pickupLocation,
+    dropoffLocation
   } = tripDetails;
 
   const breakdown: QuoteBreakdownItem[] = [];
   
   // 1. Base Price based on Bus Type
-  let basePrice = busType === 'luxury' ? 200 : 100;
+  const basePrice = busType === 'luxury' ? 200 : 100;
   breakdown.push({
     name: `Base Price (${busType})`,
-    description: `Starting price for selected bus type`,
+    description: `Starting price for ${busType} charter bus`,
     amount: basePrice
   });
   
@@ -36,16 +46,30 @@ export function calculateQuote(tripDetails: QuoteRequest): QuoteResponse {
     amount: passengerPrice
   });
   
-  // 3. Calculate estimated distance fee (would use actual coordinates in production)
-  // This is a simplified calculation for the MVP
-  const distanceFee = 85;
+  // 3. Calculate distance fee using coordinates if available
+  // For a production app, this would use a directions API to get actual distance
+  let distanceFee = 85; // Default estimate
+  
+  // If we have coordinates from both locations, we could calculate a more accurate fee
+  if (pickupLocation.lat && pickupLocation.lng && 
+      dropoffLocation.lat && dropoffLocation.lng) {
+    // Basic calculation for demo - this should use a proper distance calculation in production
+    const latDiff = Math.abs(pickupLocation.lat - dropoffLocation.lat);
+    const lngDiff = Math.abs(pickupLocation.lng - dropoffLocation.lng);
+    const roughDistance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111; // km per degree at equator
+    
+    // Adjust fee based on rough distance (simplified)
+    if (roughDistance > 50) distanceFee = 150;
+    else if (roughDistance > 20) distanceFee = 120;
+  }
+  
   breakdown.push({
     name: "Distance Fee",
-    description: "Estimated based on route",
+    description: `From ${pickupLocation.formattedAddress.split(',')[0]} to ${dropoffLocation.formattedAddress.split(',')[0]}`,
     amount: distanceFee
   });
   
-  // 4. Calculate duration fee (would use API in production)
+  // 4. Calculate duration fee
   const durationFee = 120;
   breakdown.push({
     name: "Duration Fee",
@@ -75,19 +99,16 @@ export function calculateQuote(tripDetails: QuoteRequest): QuoteResponse {
   }
   
   // Calculate subtotal
-  let subtotal = 0;
-  breakdown.forEach(item => {
-    subtotal += item.amount;
-  });
+  let subtotal = breakdown.reduce((sum, item) => sum + item.amount, 0);
   
   // Apply round trip multiplier
   subtotal *= tripMultiplier;
   
   // Calculate service fee (10% of subtotal)
-  const serviceFee = subtotal * 0.10;
+  const serviceFee = Math.round(subtotal * 0.10 * 100) / 100;
   
   // Calculate total
-  const total = subtotal + serviceFee;
+  const total = Math.round((subtotal + serviceFee) * 100) / 100;
   
   // Set quote expiration (24 hours from now)
   const expiresAt = new Date();
@@ -98,7 +119,7 @@ export function calculateQuote(tripDetails: QuoteRequest): QuoteResponse {
     quoteId: uuidv4(),
     tripDetails,
     breakdown,
-    subtotal,
+    subtotal: Math.round(subtotal * 100) / 100, // Round to 2 decimal places
     serviceFee,
     total,
     expiresAt: expiresAt.toISOString()

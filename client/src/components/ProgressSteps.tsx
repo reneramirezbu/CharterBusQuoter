@@ -15,7 +15,7 @@ const ProgressSteps: React.FC<ProgressStepsProps> = ({ currentStep }) => {
   return (
     <div className="flex justify-between items-center max-w-3xl mx-auto mb-8">
       {steps.map((step, index) => (
-        <React.Fragment key={step.number}>
+        <div key={step.number} className="flex items-center">
           <div className="flex flex-col items-center">
             <div 
               className={cn(
@@ -43,11 +43,11 @@ const ProgressSteps: React.FC<ProgressStepsProps> = ({ currentStep }) => {
               className={cn(
                 "flex-1 h-1", 
                 index < currentStep - 1 ? "bg-primary" : "bg-gray-200",
-                "mx-2"
+                "mx-2 w-full"
               )}
             ></div>
           )}
-        </React.Fragment>
+        </div>
       ))}
     </div>
   );
