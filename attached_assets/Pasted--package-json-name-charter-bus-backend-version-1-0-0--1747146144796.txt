@@ -1,0 +1,1320 @@
+    // package.json
+    {
+      "name": "charter-bus-backend",
+      "version": "1.0.0",
+      "description": "Backend for Charter Bus Booking MVP",
+      "main": "server.js",
+      "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+      },
+      "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.0.3",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.0",
+        "mongoose": "^7.0.0", // Assuming MongoDB
+        "socket.io": "^4.6.1",
+        "stripe": "^11.0.0", // For payment integration
+        "validator": "^13.9.0"
+      },
+      "devDependencies": {
+        "nodemon": "^2.0.20"
+      }
+    }
+    ```javascript
+    // server.js
+    // Main entry point for the backend application
+
+    const express = require('express');
+    const http = require('http');
+    const { Server } = require("socket.io");
+    const cors = require('cors');
+    const dotenv = require('dotenv');
+    // const connectDB = require('./config/db'); // Uncomment when DB connection is set up
+
+    // Load environment variables
+    dotenv.config();
+
+    // Initialize Express app
+    const app = express();
+    const server = http.createServer(app);
+
+    // Initialize Socket.IO
+    const io = new Server(server, {
+        cors: {
+            origin: process.env.FRONTEND_URL || "http://localhost:3000", // Allow frontend origin
+            methods: ["GET", "POST"]
+        }
+    });
+
+    // Connect to Database (Conceptual - replace with actual connection)
+    // connectDB(); 
+    console.log("Conceptual DB connection would be established here.");
+
+    // Middleware
+    app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000" })); // Enable CORS
+    app.use(express.json()); // Body parser for JSON requests
+    app.use(express.urlencoded({ extended: false })); // Body parser for URL-encoded requests
+
+    // Global error handler (simple version)
+    app.use((err, req, res, next) => {
+        console.error(err.stack);
+        res.status(500).send({ message: 'Something broke!', error: err.message });
+    });
+
+    // API Routes
+    app.get('/', (req, res) => {
+        res.send('Charter Bus MVP API Running');
+    });
+
+    app.use('/api/auth', require('./routes/authRoutes'));
+    app.use('/api/quotes', require('./routes/quoteRoutes'));
+    app.use('/api/bookings', require('./routes/bookingRoutes'));
+    app.use('/api/payments', require('./routes/paymentRoutes'));
+    app.use('/api/issues', require('./routes/issueReportRoutes'));
+    app.use('/api/contracts', require('./routes/contractRoutes'));
+
+    // Socket.IO connection handling
+    io.on('connection', (socket) => {
+        console.log('A user connected via Socket.IO:', socket.id);
+
+        socket.on('joinTripRoom', (tripId) => {
+            socket.join(tripId);
+            console.log(`User ${socket.id} joined room for trip ${tripId}`);
+        });
+
+        socket.on('leaveTripRoom', (tripId) => {
+            socket.leave(tripId);
+            console.log(`User ${socket.id} left room for trip ${tripId}`);
+        });
+
+        socket.on('sendMessage', ({ tripId, message }) => {
+            // Here you would save the message to the DB and then broadcast
+            console.log(`Message received for trip ${tripId}:`, message);
+            io.to(tripId).emit('newMessage', { ...message, timestamp: new Date() });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('User disconnected:', socket.id);
+        });
+    });
+
+    // Make io accessible to other modules (e.g., controllers for emitting events)
+    app.set('socketio', io);
+
+
+    const PORT = process.env.PORT || 5000;
+    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    ```javascript
+    // config/db.js (Conceptual - for MongoDB with Mongoose)
+    const mongoose = require('mongoose');
+
+    const connectDB = async () => {
+        try {
+            // It's good practice to use environment variables for sensitive data like DB URIs
+            const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/charter_bus_mvp';
+            await mongoose.connect(mongoURI, {
+                // useNewUrlParser: true, // Deprecated
+                // useUnifiedTopology: true, // Deprecated
+                // useCreateIndex: true, // Deprecated
+                // useFindAndModify: false // Deprecated
+            });
+            console.log('MongoDB Connected...');
+        } catch (err) {
+            console.error('MongoDB connection error:', err.message);
+            // Exit process with failure
+            process.exit(1);
+        }
+    };
+
+    module.exports = connectDB;
+    ```javascript
+    // middleware/authMiddleware.js
+    const jwt = require('jsonwebtoken');
+    // const User = require('../models/User'); // Assuming User model for DB check
+
+    const protect = async (req, res, next) => {
+        let token;
+
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            try {
+                // Get token from header
+                token = req.headers.authorization.split(' ')[1];
+
+                // Verify token
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'yourjwtsecret');
+
+                // Get user from the token (Conceptual: fetch user from DB)
+                // req.user = await User.findById(decoded.id).select('-password'); 
+                // For MVP, we can just attach the decoded payload.
+                req.user = decoded; 
+                
+                if (!req.user) {
+                    return res.status(401).json({ message: 'Not authorized, user not found' });
+                }
+
+                next();
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                res.status(401).json({ message: 'Not authorized, token failed' });
+            }
+        }
+
+        if (!token) {
+            res.status(401).json({ message: 'Not authorized, no token' });
+        }
+    };
+
+    module.exports = { protect };
+    ```javascript
+    // routes/authRoutes.js
+    const express = require('express');
+    const router = express.Router();
+    const { registerUser, loginUser, getUserProfile } = require('../controllers/authController');
+    const { protect } = require('../middleware/authMiddleware');
+
+    // @route   POST api/auth/register
+    // @desc    Register a new user
+    // @access  Public
+    router.post('/register', registerUser);
+
+    // @route   POST api/auth/login
+    // @desc    Authenticate user & get token
+    // @access  Public
+    router.post('/login', loginUser);
+
+    // @route   GET api/auth/profile
+    // @desc    Get user profile
+    // @access  Private
+    router.get('/profile', protect, getUserProfile);
+
+    module.exports = router;
+    ```javascript
+    // controllers/authController.js
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcryptjs');
+    // const User = require('../models/User'); // Assuming User model
+
+    // Mock user store for MVP if not using a DB immediately
+    const users = []; 
+    let userIdCounter = 1;
+
+    // @desc    Register a new user
+    // @route   POST api/auth/register
+    // @access  Public
+    const registerUser = async (req, res) => {
+        const { name, email, password, role = 'customer' } = req.body;
+
+        try {
+            // Basic validation
+            if (!name || !email || !password) {
+                return res.status(400).json({ message: 'Please enter all fields' });
+            }
+
+            // Check if user already exists (mock)
+            const userExists = users.find(user => user.email === email);
+            if (userExists) {
+                return res.status(400).json({ message: 'User already exists' });
+            }
+
+            // Hash password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            // Create user (mock)
+            const newUser = {
+                id: userIdCounter++,
+                name,
+                email,
+                password: hashedPassword,
+                role
+            };
+            users.push(newUser);
+            console.log('Registered User:', newUser);
+
+
+            // Create token
+            const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, process.env.JWT_SECRET || 'yourjwtsecret', {
+                expiresIn: '30d',
+            });
+
+            res.status(201).json({
+                token,
+                user: {
+                    id: newUser.id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: newUser.role
+                },
+                message: "User registered successfully"
+            });
+
+        } catch (error) {
+            console.error("Registration error:", error);
+            res.status(500).json({ message: 'Server error during registration', error: error.message });
+        }
+    };
+
+    // @desc    Authenticate user & get token
+    // @route   POST api/auth/login
+    // @access  Public
+    const loginUser = async (req, res) => {
+        const { email, password } = req.body;
+
+        try {
+            // Basic validation
+            if (!email || !password) {
+                return res.status(400).json({ message: 'Please provide email and password' });
+            }
+            
+            // Find user by email (mock)
+            const user = users.find(user => user.email === email);
+            if (!user) {
+                return res.status(400).json({ message: 'Invalid credentials (user not found)' });
+            }
+
+            // Check password
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Invalid credentials (password mismatch)' });
+            }
+
+            // Create token
+            const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET || 'yourjwtsecret', {
+                expiresIn: '30d',
+            });
+
+            res.json({
+                token,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                },
+                message: "Login successful"
+            });
+
+        } catch (error) {
+            console.error("Login error:", error);
+            res.status(500).json({ message: 'Server error during login', error: error.message });
+        }
+    };
+
+    // @desc    Get user profile
+    // @route   GET api/auth/profile
+    // @access  Private
+    const getUserProfile = async (req, res) => {
+        // req.user is set by the protect middleware
+        // In a real app, you might fetch fresh user data from the DB
+        // const user = await User.findById(req.user.id).select('-password');
+        const user = users.find(u => u.id === req.user.id);
+
+
+        if (user) {
+            res.json({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    };
+
+
+    module.exports = {
+        registerUser,
+        loginUser,
+        getUserProfile,
+    };
+    ```javascript
+    // services/pricingService.js
+    // This service is responsible for calculating quote prices.
+
+    const calculateQuote = (tripDetails) => {
+        const {
+            numPassengers,
+            durationHours, // Trip duration in hours
+            distanceKm,    // Trip distance in kilometers
+            tripDate,      // Date of the trip
+            busType,       // e.g., 'standard', 'luxury'
+            amenities = [] // e.g., ['wifi', 'lavatory']
+        } = tripDetails;
+
+        let basePrice = 0;
+        const potentialFees = [];
+
+        // --- Basic Pricing Factors ---
+        // 1. Bus Capacity / Type
+        if (busType === 'luxury') {
+            basePrice += 200; // Higher base for luxury
+        } else { // standard
+            basePrice += 100; // Base for standard
+        }
+        if (numPassengers > 50) basePrice += 150; // Larger bus needed
+        else if (numPassengers > 30) basePrice += 100;
+        else if (numPassengers > 15) basePrice += 50;
+
+        // 2. Duration
+        const hourlyRate = busType === 'luxury' ? 70 : 50;
+        basePrice += durationHours * hourlyRate;
+        if (durationHours > 8) { // Potential overtime
+            potentialFees.push({ name: 'Potential Overtime', amount: `Est. ${hourlyRate * 1.5}/hr after 8hrs`, details: "Charged if trip exceeds planned duration." });
+        }
+        
+        // 3. Distance
+        const distanceRate = 1.5; // $/km
+        basePrice += distanceKm * distanceRate;
+        if (distanceKm > 300) {
+             potentialFees.push({ name: 'Fuel Surcharge (Long Distance)', amount: '5-10% of base', details: "May apply for extensive travel." });
+        }
+
+        // 4. Date (e.g., peak season, weekends)
+        const date = new Date(tripDate);
+        const dayOfWeek = date.getDay(); // 0 (Sun) - 6 (Sat)
+        const month = date.getMonth(); // 0 (Jan) - 11 (Dec)
+
+        if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekend
+            basePrice *= 1.1; // 10% surcharge for weekends
+            potentialFees.push({ name: 'Weekend Surcharge', amount: 'Included (10%)', details: "Applied for weekend bookings." });
+        }
+        if (month === 4 || month === 5 || month === 8 || month === 9) { // Peak months (e.g., May, June, Sep, Oct)
+            basePrice *= 1.05; // 5% surcharge for peak season
+             potentialFees.push({ name: 'Peak Season Surcharge', amount: 'Included (5%)', details: "Applied for bookings during peak travel times." });
+        }
+
+        // 5. Amenities
+        if (amenities.includes('wifi')) basePrice += 20;
+        if (amenities.includes('lavatory')) basePrice += 50;
+
+        // --- Potential Additional Fees (Clearly Listed) ---
+        potentialFees.push({ name: 'Driver Gratuity', amount: '15-20% (Recommended)', details: "Optional, but appreciated for excellent service." });
+        potentialFees.push({ name: 'Cleaning Fee', amount: '$50-$200', details: "Applicable if excessive cleaning is required post-trip." });
+        potentialFees.push({ name: 'Parking/Tolls', amount: 'At Cost', details: "Any parking fees or tolls incurred during the trip will be added." });
+        potentialFees.push({ name: 'Late Night/Early Morning Surcharge', amount: '$50-$100', details: "May apply for trips operating between 12 AM and 5 AM." });
+
+
+        // Final quote object
+        const quote = {
+            tripDetails,
+            basePrice: parseFloat(basePrice.toFixed(2)),
+            detailedBreakdown: [
+                { item: 'Bus Type & Capacity', cost: basePrice * 0.4 }, // Example breakdown
+                { item: 'Duration Charge', cost: basePrice * 0.3 },
+                { item: 'Distance Charge', cost: basePrice * 0.2 },
+                { item: 'Date/Season Adjustment', cost: basePrice * 0.1 }
+            ],
+            potentialAdditionalFees: potentialFees,
+            totalEstimatedPrice: parseFloat(basePrice.toFixed(2)), // Initial estimate, can be adjusted
+            currency: 'USD',
+            validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Quote valid for 7 days
+        };
+
+        return quote;
+    };
+
+    module.exports = {
+        calculateQuote,
+    };
+    ```javascript
+    // routes/quoteRoutes.js
+    const express = require('express');
+    const router = express.Router();
+    const { createQuote, getQuote } = require('../controllers/quoteController');
+    const { protect } = require('../middleware/authMiddleware'); // Assuming quotes can be created by authenticated users
+
+    // @route   POST api/quotes
+    // @desc    Create a new trip quote
+    // @access  Private (or Public, depending on requirements)
+    router.post('/', protect, createQuote);
+
+    // @route   GET api/quotes/:id
+    // @desc    Get a quote by ID
+    // @access  Private (user should only access their quotes, or admin access)
+    router.get('/:id', protect, getQuote);
+
+    module.exports = router;
+    ```javascript
+    // controllers/quoteController.js
+    const pricingService = require('../services/pricingService');
+    // const Quote = require('../models/Quote'); // Assuming Quote model for DB operations
+
+    // Mock quote store for MVP
+    const quotes = [];
+    let quoteIdCounter = 1;
+
+    // @desc    Create a new trip quote
+    // @route   POST api/quotes
+    // @access  Private (or public)
+    const createQuote = async (req, res) => {
+        const { date, time, numPassengers, pickupLocation, dropoffLocation, routeInfo, busType, amenities } = req.body;
+        const userId = req.user ? req.user.id : null; // If public, userId might be null
+
+        // Basic validation
+        if (!date || !time || !numPassengers || !pickupLocation || !dropoffLocation) {
+            return res.status(400).json({ message: 'Please provide all required trip details for a quote.' });
+        }
+
+        const tripDetails = {
+            date,
+            time,
+            numPassengers,
+            pickupLocation,
+            dropoffLocation,
+            routeInfo: routeInfo || 'Direct route assumed',
+            // For MVP, we'll assume some defaults for duration and distance if not provided
+            // In a real app, you'd use a mapping service or more detailed inputs
+            durationHours: req.body.durationHours || 4, // Example: default 4 hours
+            distanceKm: req.body.distanceKm || 100,   // Example: default 100 km
+            busType: busType || 'standard',
+            amenities: amenities || []
+        };
+
+        try {
+            const calculatedQuote = pricingService.calculateQuote(tripDetails);
+            
+            // Save quote to mock DB
+            const newQuote = {
+                id: quoteIdCounter++,
+                userId, // Link to user if logged in
+                ...calculatedQuote,
+                status: 'pending', // initial status
+                createdAt: new Date()
+            };
+            quotes.push(newQuote);
+            console.log('Created Quote:', newQuote);
+
+            res.status(201).json(newQuote);
+
+        } catch (error) {
+            console.error('Error creating quote:', error);
+            res.status(500).json({ message: 'Server error while creating quote.', error: error.message });
+        }
+    };
+
+    // @desc    Get a quote by ID
+    // @route   GET api/quotes/:id
+    // @access  Private
+    const getQuote = async (req, res) => {
+        try {
+            const quoteId = parseInt(req.params.id);
+            const quote = quotes.find(q => q.id === quoteId);
+
+            if (!quote) {
+                return res.status(404).json({ message: 'Quote not found' });
+            }
+
+            // Authorization check: ensure the user requesting the quote is the one who created it or an admin
+            // For MVP, if req.user.id matches quote.userId or if user is admin
+            if (quote.userId && req.user.id !== quote.userId && req.user.role !== 'admin') {
+                 return res.status(403).json({ message: 'Not authorized to view this quote' });
+            }
+
+            res.json(quote);
+
+        } catch (error) {
+            console.error('Error fetching quote:', error);
+            res.status(500).json({ message: 'Server error while fetching quote.', error: error.message });
+        }
+    };
+
+    module.exports = {
+        createQuote,
+        getQuote,
+    };
+    ```javascript
+    // routes/bookingRoutes.js
+    const express = require('express');
+    const router = express.Router();
+    const { createBooking, getBooking, updateBookingStatus, getBookingsForUser, addMessageToBooking } = require('../controllers/bookingController');
+    const { protect } = require('../middleware/authMiddleware');
+
+    // @route   POST api/bookings
+    // @desc    Create a new booking from an accepted quote
+    // @access  Private
+    router.post('/', protect, createBooking);
+
+    // @route   GET api/bookings/:id
+    // @desc    Get booking details by ID
+    // @access  Private (user should only access their bookings, or admin access)
+    router.get('/:id', protect, getBooking);
+
+    // @route   GET api/bookings/mybookings
+    // @desc    Get all bookings for the logged-in user
+    // @access  Private
+    router.get('/mybookings', protect, getBookingsForUser);
+
+
+    // @route   PUT api/bookings/:id/status
+    // @desc    Update booking status (e.g., by admin or system)
+    // @access  Private (typically admin or system action)
+    router.put('/:id/status', protect, updateBookingStatus); // Add role check if needed
+
+    // @route   POST api/bookings/:id/messages
+    // @desc    Add a message to a booking's chat
+    // @access  Private
+    router.post('/:id/messages', protect, addMessageToBooking);
+
+
+    module.exports = router;
+    ```javascript
+    // controllers/bookingController.js
+    // const Booking = require('../models/Booking'); // Assuming Booking model
+    // const Quote = require('../models/Quote'); // Assuming Quote model
+    // const User = require('../models/User'); // Assuming User model
+
+    // Mock stores for MVP
+    const bookings = [];
+    let bookingIdCounter = 1;
+    const { quotes } = require('./quoteController'); // Access mock quotes for now
+
+    // @desc    Create a new booking from an accepted quote
+    // @route   POST api/bookings
+    // @access  Private
+    const createBooking = async (req, res) => {
+        const { quoteId, paymentDetails } = req.body; // PaymentDetails might include paymentIntentId from Stripe
+        const userId = req.user.id;
+
+        try {
+            const quote = quotes.find(q => q.id === parseInt(quoteId)); // Using mock quotes
+            if (!quote) {
+                return res.status(404).json({ message: 'Quote not found' });
+            }
+            if (quote.status !== 'pending' && quote.status !== 'accepted') { // Or some other logic for quote acceptance
+                 return res.status(400).json({ message: 'Quote cannot be converted to booking. Status: ' + quote.status });
+            }
+
+            // In a real app, you'd verify payment here before creating a booking
+            // For MVP, we assume payment is handled and successful if paymentDetails are present
+            if (!paymentDetails || !paymentDetails.transactionId) { // Mocking a transaction ID check
+                // return res.status(400).json({ message: 'Payment confirmation is required to create a booking.' });
+                console.warn("Proceeding with booking without full payment confirmation (MVP behavior)");
+            }
+
+            const newBooking = {
+                id: bookingIdCounter++,
+                userId,
+                quoteId,
+                tripDetails: quote.tripDetails,
+                totalPrice: quote.totalEstimatedPrice,
+                paymentStatus: paymentDetails ? 'paid_deposit' : 'pending_payment', // Example status
+                bookingStatus: 'confirmed', // Initial status after booking
+                vehicleType: quote.tripDetails.busType || 'Standard Coach', // From quote or assign default
+                vehicleCapacity: quote.tripDetails.numPassengers > 30 ? 56 : 35, // Example logic
+                driverInfo: { // Placeholder driver info
+                    name: 'Driver Not Assigned Yet',
+                    contact: 'N/A'
+                },
+                messages: [],
+                createdAt: new Date(),
+                // Add contract and cancellation policy references here
+                contractUrl: `/api/contracts/default_charter_contract.pdf`, // Example
+                cancellationPolicyDetails: "Full refund if cancelled 7 days prior. 50% refund if cancelled 3-6 days prior. No refund if cancelled within 48 hours."
+            };
+            bookings.push(newBooking);
+
+            // Update quote status (mock)
+            quote.status = 'booked';
+
+            // Emit event for trip status update (conceptual)
+            const io = req.app.get('socketio');
+            if(io) io.to(userId.toString()).emit('bookingConfirmed', newBooking); // Notify user via their own room
+            
+            console.log('Created Booking:', newBooking);
+            res.status(201).json(newBooking);
+
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            res.status(500).json({ message: 'Server error while creating booking.', error: error.message });
+        }
+    };
+
+    // @desc    Get booking details by ID
+    // @route   GET api/bookings/:id
+    // @access  Private
+    const getBooking = async (req, res) => {
+        try {
+            const bookingId = parseInt(req.params.id);
+            const booking = bookings.find(b => b.id === bookingId);
+
+            if (!booking) {
+                return res.status(404).json({ message: 'Booking not found' });
+            }
+
+            // Authorization: User can only see their own bookings, or admin can see any
+            if (booking.userId !== req.user.id && req.user.role !== 'admin') {
+                return res.status(403).json({ message: 'Not authorized to view this booking' });
+            }
+
+            res.json(booking);
+        } catch (error) {
+            console.error('Error fetching booking:', error);
+            res.status(500).json({ message: 'Server error while fetching booking.', error: error.message });
+        }
+    };
+
+    // @desc    Get all bookings for the logged-in user
+    // @route   GET api/bookings/mybookings
+    // @access  Private
+    const getBookingsForUser = async (req, res) => {
+        try {
+            const userBookings = bookings.filter(b => b.userId === req.user.id);
+            res.json(userBookings);
+        } catch (error) {
+            console.error('Error fetching user bookings:', error);
+            res.status(500).json({ message: 'Server error while fetching user bookings.', error: error.message });
+        }
+    };
+
+
+    // @desc    Update booking status
+    // @route   PUT api/bookings/:id/status
+    // @access  Private (Admin or system)
+    const updateBookingStatus = async (req, res) => {
+        const { status, driverName, driverContact, vehicleDetails } = req.body; // e.g., "Driver Assigned", "On the way", "Arrived", "Completed", "Cancelled"
+        const bookingId = parseInt(req.params.id);
+
+        // For MVP, only admin can change status broadly. Specific logic for driver assignment.
+        if (req.user.role !== 'admin' && !(status === 'Driver Assigned' && req.user.role === 'dispatcher_placeholder')) { // Example role check
+            // return res.status(403).json({ message: 'Not authorized to update booking status' });
+        }
+
+        try {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) {
+                return res.status(404).json({ message: 'Booking not found' });
+            }
+
+            booking.bookingStatus = status;
+            if (driverName) booking.driverInfo.name = driverName;
+            if (driverContact) booking.driverInfo.contact = driverContact;
+            if (vehicleDetails) { // e.g. { type: "Luxury Coach", licensePlate: "XYZ123" }
+                booking.vehicleType = vehicleDetails.type || booking.vehicleType;
+                // Add more vehicle details as needed
+            }
+            
+            console.log(`Booking ${bookingId} status updated to ${status}`, booking.driverInfo);
+
+            // Emit event for trip status update using Socket.IO
+            const io = req.app.get('socketio');
+            if (io) {
+                // Emit to a room specific to this trip/booking
+                io.to(bookingId.toString()).emit('tripStatusUpdate', { bookingId, status, driverInfo: booking.driverInfo });
+                // Also emit to user-specific room if they are tracking their bookings
+                io.to(booking.userId.toString()).emit('bookingUpdate', booking);
+            }
+
+
+            res.json(booking);
+        } catch (error) {
+            console.error('Error updating booking status:', error);
+            res.status(500).json({ message: 'Server error while updating booking status.', error: error.message });
+        }
+    };
+
+    // @desc    Add a message to a booking's chat
+    // @route   POST api/bookings/:id/messages
+    // @access  Private
+    const addMessageToBooking = async (req, res) => {
+        const bookingId = parseInt(req.params.id);
+        const { senderId, senderName, text } = req.body; // senderId could be user.id or driver.id
+
+        if (req.user.id !== senderId && req.user.role !== 'admin') { // Basic check: message sender must be the logged in user
+           // Or if sender is driver associated with booking, etc. More complex logic for real app.
+           // return res.status(403).json({ message: "Not authorized to send message as this sender." });
+        }
+
+        try {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) {
+                return res.status(404).json({ message: 'Booking not found' });
+            }
+
+            // Authorization: User must be part of the booking or an admin
+            if (booking.userId !== req.user.id && /* booking.driverId !== req.user.id && */ req.user.role !== 'admin') {
+                return res.status(403).json({ message: 'Not authorized to message on this booking' });
+            }
+
+            const message = {
+                senderId,
+                senderName: senderName || req.user.name, // Default to logged in user's name
+                text,
+                timestamp: new Date()
+            };
+            booking.messages.push(message);
+
+            // Emit message using Socket.IO to the trip room
+            const io = req.app.get('socketio');
+            if (io) {
+                io.to(bookingId.toString()).emit('newMessage', { bookingId, ...message });
+            }
+            console.log(`Message added to booking ${bookingId}:`, message);
+
+            res.status(201).json(message);
+        } catch (error) {
+            console.error('Error adding message to booking:', error);
+            res.status(500).json({ message: 'Server error while adding message.', error: error.message });
+        }
+    };
+
+
+    module.exports = {
+        createBooking,
+        getBooking,
+        getBookingsForUser,
+        updateBookingStatus,
+        addMessageToBooking,
+    };
+    ```javascript
+    // services/paymentService.js (Mock Stripe Integration)
+    // In a real application, this would interact with the Stripe SDK.
+    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+    const mockPayments = [];
+    let paymentIdCounter = 1;
+    const mockRefunds = [];
+    let refundIdCounter = 1;
+
+
+    const createPaymentIntent = async (amount, currency, bookingId, userId) => {
+        // Simulates Stripe's PaymentIntent creation
+        console.log(`Mock Stripe: Creating PaymentIntent for amount ${amount} ${currency} for booking ${bookingId}`);
+        const clientSecret = `pi_${Math.random().toString(36).substr(2, 16)}_secret_${Math.random().toString(36).substr(2, 16)}`;
+        const paymentIntentId = `pi_${Math.random().toString(36).substr(2, 16)}`;
+        
+        mockPayments.push({
+            id: paymentIntentId,
+            amount,
+            currency,
+            status: 'requires_payment_method', // Initial status
+            client_secret: clientSecret,
+            bookingId,
+            userId,
+            createdAt: new Date()
+        });
+        
+        return {
+            id: paymentIntentId,
+            clientSecret: clientSecret, // This would be sent to the frontend
+            amount: amount,
+            currency: currency,
+            status: 'requires_payment_method'
+        };
+    };
+
+    const confirmPayment = async (paymentIntentId, paymentMethodId) => {
+        // Simulates confirming a payment with Stripe
+        console.log(`Mock Stripe: Confirming payment for PaymentIntent ${paymentIntentId} with method ${paymentMethodId}`);
+        const payment = mockPayments.find(p => p.id === paymentIntentId);
+        if (!payment) {
+            throw new Error("Mock PaymentIntent not found");
+        }
+        
+        // Simulate success or failure
+        if (paymentMethodId === 'pm_card_visa_success') { // Test success case
+            payment.status = 'succeeded';
+            payment.transactionId = `txn_${Math.random().toString(36).substr(2, 16)}`;
+            console.log(`Mock Stripe: Payment ${paymentIntentId} succeeded. Transaction ID: ${payment.transactionId}`);
+            return { success: true, paymentIntent: payment };
+        } else if (paymentMethodId === 'pm_card_visa_fail') { // Test failure case
+            payment.status = 'requires_payment_method'; // Or 'failed'
+            console.log(`Mock Stripe: Payment ${paymentIntentId} failed.`);
+            return { success: false, error: 'Mock payment declined.', paymentIntent: payment };
+        } else { // Default mock success
+             payment.status = 'succeeded';
+             payment.transactionId = `txn_${Math.random().toString(36).substr(2, 16)}`;
+             return { success: true, paymentIntent: payment };
+        }
+    };
+
+    const processRefund = async (paymentIntentId, amountToRefund) => {
+        // Simulates Stripe's refund process
+        console.log(`Mock Stripe: Processing refund for PaymentIntent ${paymentIntentId}, amount: ${amountToRefund}`);
+        const payment = mockPayments.find(p => p.id === paymentIntentId && p.status === 'succeeded');
+        if (!payment) {
+            throw new Error("Mock original payment not found or not succeeded, cannot refund.");
+        }
+
+        const refundAmount = amountToRefund || payment.amount; // Full refund if amount not specified
+
+        const newRefund = {
+            id: `re_${refundIdCounter++}`,
+            paymentIntentId,
+            amount: refundAmount,
+            currency: payment.currency,
+            status: 'processing', // Initial refund status
+            createdAt: new Date(),
+            processedAt: null
+        };
+        mockRefunds.push(newRefund);
+
+        // Simulate refund processing delay
+        setTimeout(() => {
+            const r = mockRefunds.find(ref => ref.id === newRefund.id);
+            if(r) {
+                r.status = 'succeeded';
+                r.processedAt = new Date();
+                console.log(`Mock Stripe: Refund ${r.id} for ${paymentIntentId} processed successfully.`);
+                // Here you might emit an event or trigger a notification
+            }
+        }, 5000); // 5 seconds delay
+
+        return { 
+            success: true, 
+            refundId: newRefund.id, 
+            status: newRefund.status, 
+            message: `Refund for ${refundAmount} ${payment.currency} initiated. Estimated processing time: 1-3 business days.` 
+        };
+    };
+    
+    const getPaymentStatus = async (paymentIntentId) => {
+        const payment = mockPayments.find(p => p.id === paymentIntentId);
+        if (!payment) {
+            return { status: 'not_found', message: 'Payment not found.' };
+        }
+        return { status: payment.status, transactionId: payment.transactionId, amount: payment.amount, currency: payment.currency };
+    };
+
+    const getRefundStatus = async (refundId) => {
+        const refund = mockRefunds.find(r => r.id === refundId);
+        if (!refund) {
+            return { status: 'not_found', message: 'Refund not found.' };
+        }
+        return { 
+            status: refund.status, 
+            amount: refund.amount, 
+            currency: refund.currency, 
+            createdAt: refund.createdAt,
+            processedAt: refund.processedAt,
+            estimatedCompletion: refund.status === 'processing' ? '1-3 business days' : null
+        };
+    };
+
+
+    module.exports = {
+        createPaymentIntent,
+        confirmPayment,
+        processRefund,
+        getPaymentStatus,
+        getRefundStatus,
+        // Expose mock data for other controllers if needed for MVP
+        mockPayments,
+        mockRefunds
+    };
+    ```javascript
+    // routes/paymentRoutes.js
+    const express = require('express');
+    const router = express.Router();
+    const { handlePayment, handleRefund, getPaymentStatusController, getRefundStatusController } = require('../controllers/paymentController');
+    const { protect } = require('../middleware/authMiddleware');
+
+    // @route   POST api/payments/charge
+    // @desc    Process a payment for a booking
+    // @access  Private
+    router.post('/charge', protect, handlePayment);
+
+    // @route   POST api/payments/refund
+    // @desc    Process a refund for a booking
+    // @access  Private (typically admin or system initiated based on cancellation policy)
+    router.post('/refund', protect, handleRefund);
+
+    // @route   GET api/payments/:paymentIntentId/status
+    // @desc    Get the status of a payment
+    // @access  Private
+    router.get('/:paymentIntentId/status', protect, getPaymentStatusController);
+
+    // @route   GET api/payments/refunds/:refundId/status
+    // @desc    Get the status of a refund
+    // @access  Private
+    router.get('/refunds/:refundId/status', protect, getRefundStatusController);
+
+
+    module.exports = router;
+    ```javascript
+    // controllers/paymentController.js
+    const paymentService = require('../services/paymentService');
+    // const Booking = require('../models/Booking'); // To update booking payment status
+    // const Payment = require('../models/Payment'); // To store payment records
+    const { bookings } = require('./bookingController'); // Access mock bookings for MVP
+
+    // @desc    Process a payment for a booking
+    // @route   POST api/payments/charge
+    // @access  Private
+    const handlePayment = async (req, res) => {
+        const { amount, currency = 'USD', bookingId, paymentMethodId } = req.body; // paymentMethodId from Stripe Elements
+        const userId = req.user.id;
+
+        if (!amount || !bookingId || !paymentMethodId) {
+            return res.status(400).json({ message: 'Amount, booking ID, and payment method ID are required.' });
+        }
+
+        try {
+            // 1. Create a PaymentIntent (or retrieve if already created for this booking attempt)
+            // For simplicity in MVP, we'll create one each time `handlePayment` is called if not passed.
+            // A real app might create it when the user proceeds to checkout and pass its ID.
+            let paymentIntent;
+            if (req.body.paymentIntentId) {
+                paymentIntent = { id: req.body.paymentIntentId, clientSecret: req.body.clientSecret }; // Assume clientSecret is also passed
+            } else {
+                paymentIntent = await paymentService.createPaymentIntent(amount, currency, bookingId, userId);
+            }
+            
+            // 2. Confirm the payment with the paymentMethodId
+            const paymentResult = await paymentService.confirmPayment(paymentIntent.id, paymentMethodId);
+
+            if (paymentResult.success) {
+                // Payment successful
+                // Update booking status (mock)
+                const booking = bookings.find(b => b.id === parseInt(bookingId) && b.userId === userId);
+                if (booking) {
+                    booking.paymentStatus = 'paid_full'; // Or 'paid_deposit' based on logic
+                    booking.transactionId = paymentResult.paymentIntent.transactionId; // Store transaction ID
+                    console.log(`Booking ${bookingId} payment status updated to ${booking.paymentStatus}`);
+                } else {
+                    console.warn(`Booking ${bookingId} not found or user mismatch for payment update.`);
+                }
+
+                // Store payment record (conceptual)
+                // await Payment.create({ userId, bookingId, stripePaymentIntentId: paymentResult.paymentIntent.id, amount, currency, status: 'succeeded', transactionId: paymentResult.paymentIntent.transactionId });
+                
+                res.json({ 
+                    success: true, 
+                    message: 'Payment successful!', 
+                    paymentIntentId: paymentResult.paymentIntent.id,
+                    status: paymentResult.paymentIntent.status,
+                    transactionId: paymentResult.paymentIntent.transactionId
+                });
+            } else {
+                // Payment failed
+                // await Payment.create({ userId, bookingId, stripePaymentIntentId: paymentIntent.id, amount, currency, status: 'failed', errorMessage: paymentResult.error });
+                res.status(400).json({ success: false, message: paymentResult.error || 'Payment failed.', paymentIntentId: paymentIntent.id });
+            }
+
+        } catch (error) {
+            console.error('Payment processing error:', error);
+            // await Payment.create({ userId, bookingId, amount, currency, status: 'error', errorMessage: error.message });
+            res.status(500).json({ message: 'Server error during payment processing.', error: error.message });
+        }
+    };
+
+    // @desc    Process a refund for a booking
+    // @route   POST api/payments/refund
+    // @access  Private (Admin/System)
+    const handleRefund = async (req, res) => {
+        const { paymentIntentId, bookingId, amount } = req.body; // amount is optional for full refund
+
+        // Authorization: Typically only admins or system can initiate refunds.
+        if (req.user.role !== 'admin' && req.user.role !== 'system') {
+            // A customer might request a refund, but an admin would process it.
+            // return res.status(403).json({ message: 'Not authorized to process refunds.' });
+        }
+        if (!paymentIntentId || !bookingId) {
+            return res.status(400).json({ message: 'Payment Intent ID and Booking ID are required for refund.' });
+        }
+
+        try {
+            const refundResult = await paymentService.processRefund(paymentIntentId, amount);
+
+            if (refundResult.success) {
+                // Update booking status to 'cancelled' or 'refunded' (mock)
+                const booking = bookings.find(b => b.id === parseInt(bookingId));
+                if (booking) {
+                    booking.bookingStatus = 'cancelled_refunded';
+                    booking.paymentStatus = 'refunded';
+                    booking.refundId = refundResult.refundId; // Store refund ID
+                    console.log(`Booking ${bookingId} status updated to ${booking.bookingStatus}, refund processing.`);
+                    // Emit event for booking update
+                    const io = req.app.get('socketio');
+                    if (io) io.to(booking.userId.toString()).emit('bookingUpdate', booking);
+                }
+                // Store refund record (conceptual)
+                // await Refund.create({ bookingId, stripePaymentIntentId, stripeRefundId: refundResult.refundId, amount: refundResult.amount || 'full', status: refundResult.status });
+                
+                res.json({ 
+                    success: true, 
+                    message: refundResult.message || 'Refund processed successfully.', 
+                    refundId: refundResult.refundId,
+                    status: refundResult.status
+                });
+            } else {
+                // await Refund.create({ bookingId, stripePaymentIntentId, amount: amount || 'full', status: 'failed', errorMessage: refundResult.error });
+                res.status(400).json({ success: false, message: refundResult.error || 'Refund failed.' });
+            }
+        } catch (error) {
+            console.error('Refund processing error:', error);
+            // await Refund.create({ bookingId, stripePaymentIntentId, amount: amount || 'full', status: 'error', errorMessage: error.message });
+            res.status(500).json({ message: 'Server error during refund processing.', error: error.message });
+        }
+    };
+
+    // @desc    Get the status of a payment
+    // @route   GET api/payments/:paymentIntentId/status
+    // @access  Private
+    const getPaymentStatusController = async (req, res) => {
+        const { paymentIntentId } = req.params;
+        try {
+            // Add authorization: user should only be able to check status of their own payments, or admin.
+            // For MVP, this check might be simplified or handled by ensuring paymentIntentId is not easily guessable.
+            const payment = paymentService.mockPayments.find(p => p.id === paymentIntentId);
+            if (payment && payment.userId !== req.user.id && req.user.role !== 'admin') {
+                 return res.status(403).json({ message: 'Not authorized to view this payment status.' });
+            }
+
+            const status = await paymentService.getPaymentStatus(paymentIntentId);
+            if (status.status === 'not_found') {
+                return res.status(404).json(status);
+            }
+            res.json(status);
+        } catch (error) {
+            console.error('Error getting payment status:', error);
+            res.status(500).json({ message: 'Server error while fetching payment status.', error: error.message });
+        }
+    };
+
+    // @desc    Get the status of a refund
+    // @route   GET api/payments/refunds/:refundId/status
+    // @access  Private
+    const getRefundStatusController = async (req, res) => {
+        const { refundId } = req.params;
+        try {
+             // Add authorization similar to payment status
+            const refund = paymentService.mockRefunds.find(r => r.id === refundId);
+            if (refund) {
+                const originalPayment = paymentService.mockPayments.find(p => p.id === refund.paymentIntentId);
+                if (originalPayment && originalPayment.userId !== req.user.id && req.user.role !== 'admin') {
+                    return res.status(403).json({ message: 'Not authorized to view this refund status.' });
+                }
+            } else {
+                 return res.status(404).json({ message: 'Refund not found for authorization check.' });
+            }
+
+
+            const status = await paymentService.getRefundStatus(refundId);
+            if (status.status === 'not_found') {
+                return res.status(404).json(status);
+            }
+            res.json(status);
+        } catch (error) {
+            console.error('Error getting refund status:', error);
+            res.status(500).json({ message: 'Server error while fetching refund status.', error: error.message });
+        }
+    };
+
+    module.exports = {
+        handlePayment,
+        handleRefund,
+        getPaymentStatusController,
+        getRefundStatusController,
+    };
+    ```javascript
+    // routes/issueReportRoutes.js
+    const express = require('express');
+    const router = express.Router();
+    const { createIssueReport, getIssueReportsForBooking } = require('../controllers/issueReportController');
+    const { protect } = require('../middleware/authMiddleware');
+
+    // @route   POST api/issues
+    // @desc    Create a new issue report for a trip
+    // @access  Private (User who made the booking)
+    router.post('/', protect, createIssueReport);
+
+    // @route   GET api/issues/booking/:bookingId
+    // @desc    Get all issue reports for a specific booking
+    // @access  Private (Admin or user who made the booking)
+    router.get('/booking/:bookingId', protect, getIssueReportsForBooking);
+
+
+    module.exports = router;
+    ```javascript
+    // controllers/issueReportController.js
+    // const IssueReport = require('../models/IssueReport'); // Assuming IssueReport model
+    // const Booking = require('../models/Booking'); // To verify booking ownership
+
+    // Mock issue report store for MVP
+    const issueReports = [];
+    let issueReportIdCounter = 1;
+    const { bookings } = require('./bookingController'); // Access mock bookings
+
+    // @desc    Create a new issue report for a trip
+    // @route   POST api/issues
+    // @access  Private
+    const createIssueReport = async (req, res) => {
+        const { bookingId, issueType, description, reportedAt } = req.body;
+        const userId = req.user.id;
+
+        if (!bookingId || !issueType || !description) {
+            return res.status(400).json({ message: 'Booking ID, issue type, and description are required.' });
+        }
+
+        try {
+            // Verify the user owns the booking they are reporting an issue for
+            const booking = bookings.find(b => b.id === parseInt(bookingId));
+            if (!booking) {
+                return res.status(404).json({ message: 'Booking not found.' });
+            }
+            if (booking.userId !== userId && req.user.role !== 'admin') { // Allow admin to report too
+                return res.status(403).json({ message: 'You can only report issues for your own bookings.' });
+            }
+
+            const newReport = {
+                id: issueReportIdCounter++,
+                bookingId: parseInt(bookingId),
+                userId,
+                issueType, // e.g., 'vehicle_condition', 'driver_professionalism', 'timing_issue'
+                description,
+                status: 'submitted', // Initial status: submitted, under_review, resolved
+                reportedAt: reportedAt || new Date(),
+                attachments: req.body.attachments || [] // Array of URLs to uploaded files (future feature)
+            };
+            issueReports.push(newReport);
+            console.log('Created Issue Report:', newReport);
+
+            // In a real app, you might notify an admin or support team here.
+
+            res.status(201).json(newReport);
+        } catch (error) {
+            console.error('Error creating issue report:', error);
+            res.status(500).json({ message: 'Server error while creating issue report.', error: error.message });
+        }
+    };
+
+    // @desc    Get all issue reports for a specific booking
+    // @route   GET api/issues/booking/:bookingId
+    // @access  Private (Admin or user who made the booking)
+    const getIssueReportsForBooking = async (req, res) => {
+        const bookingId = parseInt(req.params.bookingId);
+        const userId = req.user.id;
+
+        try {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) {
+                return res.status(404).json({ message: 'Booking not found.' });
+            }
+
+            // Authorization: User can see reports for their booking, or admin can see all
+            if (booking.userId !== userId && req.user.role !== 'admin') {
+                return res.status(403).json({ message: 'Not authorized to view these issue reports.' });
+            }
+
+            const reports = issueReports.filter(report => report.bookingId === bookingId);
+            res.json(reports);
+
+        } catch (error) {
+            console.error('Error fetching issue reports:', error);
+            res.status(500).json({ message: 'Server error while fetching issue reports.', error: error.message });
+        }
+    };
+
+    module.exports = {
+        createIssueReport,
+        getIssueReportsForBooking,
+    };
+    ```javascript
+    // routes/contractRoutes.js
+    const express = require('express');
+    const router = express.Router();
+    const { getContractDetails, getCancellationPolicy } = require('../controllers/contractController');
+    const { protect } = require('../middleware/authMiddleware');
+
+    // @route   GET api/contracts/booking/:bookingId
+    // @desc    Get contract details for a specific booking
+    // @access  Private
+    router.get('/booking/:bookingId', protect, getContractDetails);
+
+    // @route   GET api/contracts/cancellation-policy
+    // @desc    Get the general cancellation policy
+    // @access  Public (or Private if specific to user context)
+    router.get('/cancellation-policy', getCancellationPolicy); // No 'protect' if it's a general public policy
+
+    module.exports = router;
+    ```javascript
+    // controllers/contractController.js
+    // const Contract = require('../models/Contract'); // If storing dynamic contracts or templates in DB
+    const { bookings } = require('./bookingController'); // Access mock bookings for MVP
+
+    // Mock data for contract templates and policies
+    const defaultContractTemplate = {
+        title: "Standard Charter Bus Service Agreement",
+        version: "1.0",
+        clauses: [
+            { id: "1", title: "Service Description", text: "The company agrees to provide charter bus transportation services as detailed in the booking confirmation. This includes the specified vehicle type, date, time, and route." },
+            { id: "2", title: "Payment Terms", text: "Full payment or agreed deposit is required to confirm the booking. Final payment due as per booking terms. Additional charges (tolls, parking, overtime) may apply." },
+            { id: "3", title: "Responsibilities of the Customer", text: "Customers are responsible for the conduct of their party. Damage to the vehicle caused by passengers may incur additional charges. Consumption of illegal substances is prohibited." },
+            { id: "4", title: "Responsibilities of the Company", text: "The company will ensure the vehicle is in good operating condition and a qualified driver is provided. The company is not liable for delays caused by traffic, weather, or other unforeseen circumstances beyond its direct control." },
+            { id: "5", title: "Cancellation (see separate policy)", text: "Cancellations are subject to the company's cancellation policy, which is provided at the time of booking and available on our website." },
+            { id: "6", title: "Liability", text: "The company's liability is limited as per applicable laws and insurance coverage." }
+        ],
+        effectiveDate: "2024-01-01"
+    };
+
+    const generalCancellationPolicy = {
+        policyName: "Standard Cancellation Policy",
+        version: "1.1",
+        terms: [
+            { condition: "Cancellation more than 14 days before trip date", refund: "Full refund of amount paid, minus any non-refundable processing fees (e.g., $25)." },
+            { condition: "Cancellation between 7 and 14 days before trip date", refund: "75% refund of total booking cost." },
+            { condition: "Cancellation between 3 and 6 days (72-144 hours) before trip date", refund: "50% refund of total booking cost." },
+            { condition: "Cancellation less than 72 hours before trip start time", refund: "No refund." },
+            { condition: "No-show", refund: "No refund." }
+        ],
+        notes: "All cancellation requests must be submitted in writing (e.g., via email or in-app request). Refunds will be processed to the original payment method within 7-10 business days after approval. Special event or peak period bookings may have different cancellation terms, which will be specified at the time of booking."
+    };
+
+
+    // @desc    Get contract details for a specific booking
+    // @route   GET api/contracts/booking/:bookingId
+    // @access  Private
+    const getContractDetails = async (req, res) => {
+        const bookingId = parseInt(req.params.bookingId);
+        const userId = req.user.id;
+
+        try {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) {
+                return res.status(404).json({ message: 'Booking not found.' });
+            }
+
+            // Authorization: User must own the booking or be an admin
+            if (booking.userId !== userId && req.user.role !== 'admin') {
+                return res.status(403).json({ message: 'Not authorized to view this contract.' });
+            }
+
+            // For MVP, we return a generic contract, possibly customized with booking details
+            const contractForBooking = {
+                ...defaultContractTemplate,
+                bookingReference: `BOOKING-${booking.id}`,
+                customerName: req.user.name, // Assuming user name is available
+                tripDetailsSummary: booking.tripDetails,
+                cancellationPolicySnapshot: booking.cancellationPolicyDetails || generalCancellationPolicy // Use booking specific if available
+            };
+
+            res.json(contractForBooking);
+
+        } catch (error) {
+            console.error('Error fetching contract details:', error);
+            res.status(500).json({ message: 'Server error while fetching contract details.', error: error.message });
+        }
+    };
+
+    // @desc    Get the general cancellation policy
+    // @route   GET api/contracts/cancellation-policy
+    // @access  Public (or Private)
+    const getCancellationPolicy = async (req, res) => {
+        try {
+            // This returns a general policy. Specific bookings might have snapshots or variations.
+            res.json(generalCancellationPolicy);
+        } catch (error) {
+            console.error('Error fetching cancellation policy:', error);
+            res.status(500).json({ message: 'Server error while fetching cancellation policy.', error: error.message });
+        }
+    };
+
+    module.exports = {
+        getContractDetails,
+        getCancellationPolicy,
+    };
+    
