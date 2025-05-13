@@ -1,0 +1,50 @@
+/* quote-widget.css */
+.charter-quote-widget {
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: inherit;
+  color: #333;
+}
+.charter-quote-widget h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.charter-quote-widget form {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.charter-quote-widget label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+.charter-quote-widget input,
+.charter-quote-widget select,
+.charter-quote-widget button {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.charter-quote-widget button {
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.charter-quote-widget button:hover {
+  background: #005bb5;
+}
+.charter-quote-widget .results {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 6px;
+  background: #f9f9f9;
+  font-size: 1.1rem;
+}
