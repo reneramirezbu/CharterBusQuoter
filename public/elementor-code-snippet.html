@@ -1,0 +1,1026 @@
+<!-- 
+CHARTER BUS QUOTE WIDGET FOR ELEMENTOR
+--------------------------------------
+INSTRUCTIONS:
+1. In Elementor, add an HTML element to your page
+2. Copy and paste this ENTIRE code block into the HTML element
+3. Save and publish your page
+-->
+
+<!-- Widget Container -->
+<div id="charter-quote-widget" class="charter-quote-widget">
+  <h2>Charter Bus Quote</h2>
+  <div class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <form id="charter-quote-form" class="charter-quote-form">
+    <!-- Progress Steps -->
+    <div class="progress-bar">
+      <div class="step active">1. Trip Details</div>
+      <div class="step">2. Bus Options</div>
+      <div class="step">3. Summary</div>
+    </div>
+
+    <!-- Step 1: Trip Details -->
+    <div id="step-trip-details" class="form-step" style="display: block;">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="trip-type">Trip Type</label>
+          <select id="trip-type" name="tripType" required>
+            <option value="">Select Trip Type</option>
+            <option value="one-way">One Way</option>
+            <option value="round-trip">Round Trip</option>
+          </select>
+          <div class="error-message"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="pickup-location">Pickup Location</label>
+          <input type="text" id="pickup-location" name="pickupLocation" placeholder="Enter pickup address" required>
+          <div class="error-message"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dropoff-location">Dropoff Location</label>
+          <input type="text" id="dropoff-location" name="dropoffLocation" placeholder="Enter dropoff address" required>
+          <div class="error-message"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group date-group">
+          <label for="departure-date">Departure Date</label>
+          <input type="date" id="departure-date" name="departureDate" required>
+          <div class="error-message"></div>
+        </div>
+        <div class="form-group time-group">
+          <label for="departure-time">Departure Time</label>
+          <input type="time" id="departure-time" name="departureTime" required>
+          <div class="error-message"></div>
+        </div>
+      </div>
+
+      <div id="return-date-container" class="form-row" style="display: none;">
+        <div class="form-group date-group">
+          <label for="return-date">Return Date</label>
+          <input type="date" id="return-date" name="returnDate">
+          <div class="error-message"></div>
+        </div>
+        <div class="form-group time-group">
+          <label for="return-time">Return Time</label>
+          <input type="time" id="return-time" name="returnTime">
+          <div class="error-message"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="passenger-count">Number of Passengers</label>
+          <input type="number" id="passenger-count" name="passengerCount" min="1" max="500" required>
+          <div class="error-message"></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="next-to-bus-options" class="btn-primary">Next: Bus Options</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Bus Options -->
+    <div id="step-bus-options" class="form-step">
+      <h3>Select Your Bus Type</h3>
+      <div class="bus-options">
+        <div class="bus-option">
+          <input type="radio" id="bus-standard" name="busType" value="standard" required>
+          <label for="bus-standard">
+            <h4>Standard Charter Bus</h4>
+            <p>56 seats | Best for large groups</p>
+            <div class="bus-features">
+              <span>✓ WiFi</span>
+              <span>✓ Restroom</span>
+              <span>✓ Reclining Seats</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="bus-option">
+          <input type="radio" id="bus-minibus" name="busType" value="minibus">
+          <label for="bus-minibus">
+            <h4>Minibus</h4>
+            <p>30 seats | Best for medium groups</p>
+            <div class="bus-features">
+              <span>✓ WiFi</span>
+              <span>✓ TV Screens</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="bus-option">
+          <input type="radio" id="bus-sprinter" name="busType" value="sprinter">
+          <label for="bus-sprinter">
+            <h4>Sprinter Van</h4>
+            <p>15 seats | Best for small groups</p>
+            <div class="bus-features">
+              <span>✓ WiFi</span>
+              <span>✓ Luxury Interior</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <h3>Additional Amenities</h3>
+      <div class="amenities-options">
+        <div class="amenity-option">
+          <input type="checkbox" id="amenity-wifi" name="amenities" value="wifi">
+          <label for="amenity-wifi">WiFi ($50)</label>
+        </div>
+
+        <div class="amenity-option">
+          <input type="checkbox" id="amenity-bathroom" name="amenities" value="bathroom">
+          <label for="amenity-bathroom">Bathroom ($75)</label>
+        </div>
+
+        <div class="amenity-option">
+          <input type="checkbox" id="amenity-tv" name="amenities" value="tv">
+          <label for="amenity-tv">TV/DVD ($100)</label>
+        </div>
+
+        <div class="amenity-option">
+          <input type="checkbox" id="amenity-outlets" name="amenities" value="power-outlets">
+          <label for="amenity-outlets">Power Outlets ($25)</label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" id="back-to-trip-details" class="btn-secondary">Back</button>
+        <button type="button" id="get-quote" class="btn-primary">Get Quote</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Quote Summary -->
+    <div id="step-quote-summary" class="form-step">
+      <div id="quote-success" class="quote-result">
+        <h3>Your Charter Bus Quote</h3>
+        <div class="quote-details">
+          <div class="trip-summary">
+            <h4>Trip Details</h4>
+            <p><strong>Trip Type:</strong> <span id="summary-trip-type"></span></p>
+            <p><strong>From:</strong> <span id="summary-pickup"></span></p>
+            <p><strong>To:</strong> <span id="summary-dropoff"></span></p>
+            <p><strong>Departure:</strong> <span id="summary-departure"></span></p>
+            <p id="summary-return-container"><strong>Return:</strong> <span id="summary-return"></span></p>
+            <p><strong>Passengers:</strong> <span id="summary-passengers"></span></p>
+            <p><strong>Bus Type:</strong> <span id="summary-bus-type"></span></p>
+          </div>
+
+          <div class="quote-breakdown">
+            <h4>Price Breakdown</h4>
+            <div id="quote-breakdown-items"></div>
+            <div class="quote-subtotal">
+              <p><strong>Subtotal:</strong> <span id="quote-subtotal"></span></p>
+              <p><strong>Service Fee:</strong> <span id="quote-service-fee"></span></p>
+              <p class="quote-total"><strong>Total:</strong> <span id="quote-total"></span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="back-to-bus-options" class="btn-secondary">Modify Quote</button>
+          <button type="button" id="book-now" class="btn-primary">Book Now</button>
+        </div>
+      </div>
+
+      <div id="quote-error" class="quote-result" style="display: none;">
+        <h3>Error Getting Quote</h3>
+        <p class="error-message">We couldn't generate your quote. Please try again or contact us directly.</p>
+        <div class="form-actions">
+          <button type="button" id="try-again" class="btn-primary">Try Again</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- CSS Styles -->
+<style>
+/* Base Styles */
+.charter-quote-widget {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.charter-quote-widget h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.charter-quote-widget h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Form Styles */
+.form-step {
+  display: none;
+}
+
+.form-row {
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.date-group, .time-group {
+  width: calc(50% - 10px);
+  display: inline-block;
+}
+
+.date-group {
+  margin-right: 20px;
+}
+
+.charter-quote-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #444;
+}
+
+.charter-quote-form input,
+.charter-quote-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.charter-quote-form input:focus,
+.charter-quote-form select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 5px;
+  min-height: 20px;
+}
+
+/* Progress Bar */
+.progress-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 1;
+}
+
+.progress-bar .step {
+  background: #fff;
+  padding: 5px 15px;
+  border-radius: 20px;
+  border: 2px solid #e0e0e0;
+  color: #777;
+  font-weight: 500;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-bar .step.active {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.progress-bar .step.completed {
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+/* Bus Options Styles */
+.bus-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.bus-option {
+  flex: 1 1 calc(33.333% - 15px);
+  min-width: 200px;
+}
+
+.bus-option input[type="radio"] {
+  display: none;
+}
+
+.bus-option label {
+  display: block;
+  padding: 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bus-option input[type="radio"]:checked + label {
+  border-color: #3498db;
+  background-color: rgba(52, 152, 219, 0.05);
+}
+
+.bus-option h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.bus-option p {
+  margin: 0 0 10px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.bus-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bus-features span {
+  background: #f8f9fa;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #555;
+}
+
+/* Amenities Styles */
+.amenities-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.amenity-option {
+  flex: 1 1 calc(25% - 15px);
+  min-width: 150px;
+}
+
+.amenity-option input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* Button Styles */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+}
+
+.btn-secondary {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #e0e0e0;
+}
+
+/* Quote Summary Styles */
+.quote-result {
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.quote-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.trip-summary,
+.quote-breakdown {
+  flex: 1 1 calc(50% - 15px);
+  min-width: 250px;
+}
+
+.quote-breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.quote-subtotal {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.quote-total {
+  font-size: 18px;
+  color: #3498db;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .charter-quote-widget {
+    padding: 15px;
+  }
+  
+  .date-group, .time-group {
+    width: 100%;
+  }
+  
+  .date-group {
+    margin-right: 0;
+  }
+  
+  .bus-option,
+  .amenity-option {
+    flex: 1 1 100%;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+  
+  .btn-secondary {
+    order: 2;
+  }
+  
+  .quote-details {
+    flex-direction: column;
+  }
+}
+</style>
+
+<!-- Google Maps API and Widget JavaScript -->
+<script>
+// Initialize the widget when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Load Google Maps API
+  loadGoogleMapsAPI();
+
+  // Setup form navigation
+  setupFormNavigation();
+  
+  // Initialize form validation
+  setupFormValidation();
+});
+
+// Load Google Maps API
+function loadGoogleMapsAPI() {
+  const script = document.createElement('script');
+  // Use your Google Maps API key here
+  const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; // Replace with your actual API key
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initAutocomplete`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+  
+  // Define the callback function
+  window.initAutocomplete = function() {
+    // Initialize autocomplete for pickup location
+    const pickupInput = document.getElementById('pickup-location');
+    if (pickupInput) {
+      const pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+        types: ['address'],
+        fields: ['place_id', 'formatted_address', 'geometry']
+      });
+      
+      pickupAutocomplete.addListener('place_changed', function() {
+        const place = pickupAutocomplete.getPlace();
+        if (!place.geometry) {
+          pickupInput.value = "";
+          return;
+        }
+      });
+    }
+    
+    // Initialize autocomplete for dropoff location
+    const dropoffInput = document.getElementById('dropoff-location');
+    if (dropoffInput) {
+      const dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+        types: ['address'],
+        fields: ['place_id', 'formatted_address', 'geometry']
+      });
+      
+      dropoffAutocomplete.addListener('place_changed', function() {
+        const place = dropoffAutocomplete.getPlace();
+        if (!place.geometry) {
+          dropoffInput.value = "";
+          return;
+        }
+      });
+    }
+  };
+}
+
+// Setup form navigation
+function setupFormNavigation() {
+  // Trip type change handler
+  const tripTypeSelect = document.getElementById('trip-type');
+  const returnDateContainer = document.getElementById('return-date-container');
+  
+  if (tripTypeSelect && returnDateContainer) {
+    tripTypeSelect.addEventListener('change', function() {
+      if (this.value === 'round-trip') {
+        returnDateContainer.style.display = 'block';
+        document.getElementById('return-date').required = true;
+        document.getElementById('return-time').required = true;
+      } else {
+        returnDateContainer.style.display = 'none';
+        document.getElementById('return-date').required = false;
+        document.getElementById('return-time').required = false;
+      }
+    });
+  }
+  
+  // Setup default dates
+  setupDefaultDates();
+  
+  // Step 1 to Step 2 navigation
+  const nextToBusOptionsBtn = document.getElementById('next-to-bus-options');
+  if (nextToBusOptionsBtn) {
+    nextToBusOptionsBtn.addEventListener('click', function() {
+      if (validateTripDetails()) {
+        document.getElementById('step-trip-details').style.display = 'none';
+        document.getElementById('step-bus-options').style.display = 'block';
+        updateProgressBar(2);
+      }
+    });
+  }
+  
+  // Step 2 back to Step 1
+  const backToTripDetailsBtn = document.getElementById('back-to-trip-details');
+  if (backToTripDetailsBtn) {
+    backToTripDetailsBtn.addEventListener('click', function() {
+      document.getElementById('step-bus-options').style.display = 'none';
+      document.getElementById('step-trip-details').style.display = 'block';
+      updateProgressBar(1);
+    });
+  }
+  
+  // Step 2 to Step 3 (Get Quote)
+  const getQuoteBtn = document.getElementById('get-quote');
+  if (getQuoteBtn) {
+    getQuoteBtn.addEventListener('click', function() {
+      if (validateBusOptions()) {
+        getQuote();
+      }
+    });
+  }
+  
+  // Step 3 back to Step 2
+  const backToBusOptionsBtn = document.getElementById('back-to-bus-options');
+  if (backToBusOptionsBtn) {
+    backToBusOptionsBtn.addEventListener('click', function() {
+      document.getElementById('step-quote-summary').style.display = 'none';
+      document.getElementById('step-bus-options').style.display = 'block';
+      updateProgressBar(2);
+    });
+  }
+  
+  // Try again button
+  const tryAgainBtn = document.getElementById('try-again');
+  if (tryAgainBtn) {
+    tryAgainBtn.addEventListener('click', function() {
+      document.getElementById('quote-error').style.display = 'none';
+      document.getElementById('step-quote-summary').style.display = 'none';
+      document.getElementById('step-bus-options').style.display = 'block';
+      updateProgressBar(2);
+    });
+  }
+  
+  // Book now button
+  const bookNowBtn = document.getElementById('book-now');
+  if (bookNowBtn) {
+    bookNowBtn.addEventListener('click', function() {
+      alert('Booking functionality will be implemented in the full version.');
+    });
+  }
+}
+
+// Set default dates
+function setupDefaultDates() {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7);
+  
+  // Format dates for the input
+  const formatDate = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  
+  // Set default dates
+  const departureDateInput = document.getElementById('departure-date');
+  const returnDateInput = document.getElementById('return-date');
+  
+  if (departureDateInput) {
+    departureDateInput.min = formatDate(tomorrow);
+    departureDateInput.value = formatDate(tomorrow);
+  }
+  
+  if (returnDateInput) {
+    returnDateInput.min = formatDate(tomorrow);
+    returnDateInput.value = formatDate(nextWeek);
+  }
+}
+
+// Update progress bar
+function updateProgressBar(step) {
+  const steps = document.querySelectorAll('.progress-bar .step');
+  steps.forEach((el, index) => {
+    if (index + 1 < step) {
+      el.classList.add('completed');
+      el.classList.remove('active');
+    } else if (index + 1 === step) {
+      el.classList.add('active');
+      el.classList.remove('completed');
+    } else {
+      el.classList.remove('active');
+      el.classList.remove('completed');
+    }
+  });
+}
+
+// Validate trip details
+function validateTripDetails() {
+  let isValid = true;
+  const requiredFields = ['trip-type', 'pickup-location', 'dropoff-location', 'departure-date', 'departure-time', 'passenger-count'];
+  
+  // Check if trip type is round-trip
+  const tripType = document.getElementById('trip-type').value;
+  if (tripType === 'round-trip') {
+    requiredFields.push('return-date', 'return-time');
+  }
+  
+  // Validate each required field
+  requiredFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    const errorContainer = field.nextElementSibling;
+    
+    if (!field.value.trim()) {
+      errorContainer.textContent = 'This field is required';
+      isValid = false;
+    } else {
+      errorContainer.textContent = '';
+    }
+  });
+  
+  // Additional validation for passenger count
+  const passengerCount = document.getElementById('passenger-count');
+  const passengerErrorContainer = passengerCount.nextElementSibling;
+  
+  if (passengerCount.value) {
+    const count = parseInt(passengerCount.value);
+    if (isNaN(count) || count < 1) {
+      passengerErrorContainer.textContent = 'Must be at least 1 passenger';
+      isValid = false;
+    } else if (count > 500) {
+      passengerErrorContainer.textContent = 'Maximum 500 passengers allowed';
+      isValid = false;
+    }
+  }
+  
+  return isValid;
+}
+
+// Validate bus options
+function validateBusOptions() {
+  let isValid = true;
+  const busTypeRadios = document.querySelectorAll('input[name="busType"]');
+  let busTypeSelected = false;
+  
+  busTypeRadios.forEach(radio => {
+    if (radio.checked) {
+      busTypeSelected = true;
+    }
+  });
+  
+  if (!busTypeSelected) {
+    alert('Please select a bus type');
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+// Setup form validation
+function setupFormValidation() {
+  // Remove error messages when inputs change
+  const inputs = document.querySelectorAll('input, select');
+  inputs.forEach(input => {
+    input.addEventListener('input', function() {
+      const errorContainer = this.nextElementSibling;
+      if (errorContainer && errorContainer.classList.contains('error-message')) {
+        errorContainer.textContent = '';
+      }
+    });
+  });
+}
+
+// Get Quote
+function getQuote() {
+  // Show loading overlay
+  const loadingOverlay = document.querySelector('.loading-overlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'flex';
+  }
+  
+  // Collect form data
+  const formData = {
+    tripType: document.getElementById('trip-type').value,
+    pickupLocation: {
+      formatted_address: document.getElementById('pickup-location').value,
+      lat: 0, // In a real implementation, get this from the Places API
+      lng: 0
+    },
+    dropoffLocation: {
+      formatted_address: document.getElementById('dropoff-location').value,
+      lat: 0, // In a real implementation, get this from the Places API
+      lng: 0
+    },
+    departureDate: document.getElementById('departure-date').value,
+    departureTime: document.getElementById('departure-time').value,
+    returnDate: document.getElementById('trip-type').value === 'round-trip' ? document.getElementById('return-date').value : null,
+    returnTime: document.getElementById('trip-type').value === 'round-trip' ? document.getElementById('return-time').value : null,
+    passengerCount: parseInt(document.getElementById('passenger-count').value),
+    busType: document.querySelector('input[name="busType"]:checked').value,
+    amenities: Array.from(document.querySelectorAll('input[name="amenities"]:checked')).map(el => el.value)
+  };
+  
+  // Simulate API call with timeout
+  setTimeout(() => {
+    // Hide loading overlay
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'none';
+    }
+    
+    // In a real implementation, you would make an actual API call
+    // For this demo, we'll use mock data
+    const quoteResponse = generateMockQuote(formData);
+    displayQuoteSummary(quoteResponse);
+    
+    // Go to step 3
+    document.getElementById('step-bus-options').style.display = 'none';
+    document.getElementById('step-quote-summary').style.display = 'block';
+    updateProgressBar(3);
+  }, 1500);
+}
+
+// Generate a mock quote (for demo purposes)
+function generateMockQuote(formData) {
+  // Base rates
+  const basePrices = {
+    standard: 800,
+    minibus: 500,
+    sprinter: 300
+  };
+  
+  // Calculate distance factor (mock)
+  const distanceFactor = 1.5; // In a real implementation, calculate based on locations
+  
+  // Calculate base price
+  let basePrice = basePrices[formData.busType] * distanceFactor;
+  
+  // Adjust for round trip
+  if (formData.tripType === 'round-trip') {
+    basePrice *= 1.8; // 20% discount for round trip
+  }
+  
+  // Calculate amenities cost
+  const amenitiesPrices = {
+    wifi: 50,
+    bathroom: 75,
+    tv: 100,
+    'power-outlets': 25
+  };
+  
+  let amenitiesTotal = 0;
+  formData.amenities.forEach(amenity => {
+    amenitiesTotal += amenitiesPrices[amenity] || 0;
+  });
+  
+  // Generate breakdown items
+  const breakdown = [
+    {
+      description: `${formData.busType.charAt(0).toUpperCase() + formData.busType.slice(1)} Charter Bus`,
+      amount: basePrice.toFixed(2)
+    }
+  ];
+  
+  // Add amenities to breakdown
+  if (formData.amenities.length > 0) {
+    formData.amenities.forEach(amenity => {
+      breakdown.push({
+        description: `${amenity.charAt(0).toUpperCase() + amenity.slice(1)} add-on`,
+        amount: amenitiesPrices[amenity].toFixed(2)
+      });
+    });
+  }
+  
+  // Calculate subtotal
+  const subtotal = basePrice + amenitiesTotal;
+  
+  // Service fee (10%)
+  const serviceFee = subtotal * 0.1;
+  
+  // Total price
+  const total = subtotal + serviceFee;
+  
+  return {
+    id: 'QUOTE-' + Date.now(),
+    breakdown,
+    subtotal: subtotal.toFixed(2),
+    serviceFee: serviceFee.toFixed(2),
+    total: total.toFixed(2),
+    tripDetails: {
+      ...formData,
+      // Add human-readable values
+      formattedDepartureDate: formatDate(formData.departureDate, formData.departureTime),
+      formattedReturnDate: formData.returnDate ? formatDate(formData.returnDate, formData.returnTime) : null,
+      formattedBusType: formatBusType(formData.busType)
+    }
+  };
+}
+
+// Display quote summary
+function displayQuoteSummary(quoteResponse) {
+  // Update trip details summary
+  document.getElementById('summary-trip-type').textContent = 
+    quoteResponse.tripDetails.tripType === 'one-way' ? 'One Way' : 'Round Trip';
+  document.getElementById('summary-pickup').textContent = 
+    quoteResponse.tripDetails.pickupLocation.formatted_address;
+  document.getElementById('summary-dropoff').textContent = 
+    quoteResponse.tripDetails.dropoffLocation.formatted_address;
+  document.getElementById('summary-departure').textContent = 
+    quoteResponse.tripDetails.formattedDepartureDate;
+  document.getElementById('summary-passengers').textContent = 
+    quoteResponse.tripDetails.passengerCount;
+  document.getElementById('summary-bus-type').textContent = 
+    quoteResponse.tripDetails.formattedBusType;
+  
+  // Show/hide return date based on trip type
+  const returnContainer = document.getElementById('summary-return-container');
+  if (quoteResponse.tripDetails.tripType === 'round-trip') {
+    returnContainer.style.display = 'block';
+    document.getElementById('summary-return').textContent = 
+      quoteResponse.tripDetails.formattedReturnDate;
+  } else {
+    returnContainer.style.display = 'none';
+  }
+  
+  // Update price breakdown
+  const breakdownContainer = document.getElementById('quote-breakdown-items');
+  breakdownContainer.innerHTML = '';
+  
+  quoteResponse.breakdown.forEach(item => {
+    const itemElement = document.createElement('div');
+    itemElement.className = 'quote-breakdown-item';
+    itemElement.innerHTML = `
+      <span>${item.description}</span>
+      <span>$${item.amount}</span>
+    `;
+    breakdownContainer.appendChild(itemElement);
+  });
+  
+  // Update totals
+  document.getElementById('quote-subtotal').textContent = `$${quoteResponse.subtotal}`;
+  document.getElementById('quote-service-fee').textContent = `$${quoteResponse.serviceFee}`;
+  document.getElementById('quote-total').textContent = `$${quoteResponse.total}`;
+  
+  // Show success container, hide error container
+  document.getElementById('quote-success').style.display = 'block';
+  document.getElementById('quote-error').style.display = 'none';
+}
+
+// Format date for display
+function formatDate(dateStr, timeStr) {
+  const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  const date = new Date(dateStr);
+  
+  let formattedDate = date.toLocaleDateString('en-US', options);
+  
+  if (timeStr) {
+    formattedDate += ` at ${formatTime(timeStr)}`;
+  }
+  
+  return formattedDate;
+}
+
+// Format time from 24h to 12h
+function formatTime(timeStr) {
+  const [hours, minutes] = timeStr.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  
+  return `${hour12}:${minutes} ${ampm}`;
+}
+
+// Format bus type for display
+function formatBusType(busType) {
+  switch (busType) {
+    case 'standard':
+      return 'Standard Charter Bus (56 seats)';
+    case 'minibus':
+      return 'Minibus (30 seats)';
+    case 'sprinter':
+      return 'Sprinter Van (15 seats)';
+    default:
+      return busType;
+  }
+}
+</script>
